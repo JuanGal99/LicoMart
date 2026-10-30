@@ -182,16 +182,6 @@ Las rutas de aplicación están bajo el mismo origen (`http://localhost:5173`):
 
 La autorización del panel React se valida también en el backend. Ocultar una ruta en el frontend no se considera un control de permisos suficiente.
 
-## Capturas para el portafolio
-
-El repositorio incluye diagramas de base de datos, casos de uso y actividades. Para mostrar la aplicación, agrega capturas propias del catálogo, filtros, carrito y panel administrativo dentro de `imgs/` y enlázalas desde este README, por ejemplo:
-
-```markdown
-![Catálogo de LicoMart](imgs/captura-catalogo.png)
-```
-
-Comprueba que las imágenes se lean en tema claro y oscuro, que no incluyan datos personales ni credenciales y que se hayan añadido al repositorio junto con el README.
-
 ## Diagramas
 
 ### Modelo de base de datos
