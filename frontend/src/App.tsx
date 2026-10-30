@@ -7,6 +7,7 @@ import {
   isLoggedIn,
   getUserFromStorage,
   clearUserFromStorage,
+  logoutUser,
   type User,
 } from "./services/auth";
 
@@ -27,13 +28,16 @@ function App() {
   }, []);
 
   const handleLogout = () => {
+    void logoutUser().catch((error) =>
+      console.error("No se pudo cerrar la sesión en el servidor:", error)
+    );
     clearUserFromStorage();
     setUser(null);
     setIsLoggedInState(false);
   };
 
   const AdminRoute = () => {
-    if (isLoggedInState && user?.rol === "admin") return <Admin />;
+    if (isLoggedInState && user?.rol === "admin") return <Admin onLogout={handleLogout} />;
     return <Navigate to="/" replace />;
   };
 
@@ -51,7 +55,14 @@ function App() {
       <Routes>
         <Route
           path="/"
-          element={<Home isLoggedIn={isLoggedInState} user={user} search={searchQuery} />}
+          element={
+            <Home
+              isLoggedIn={isLoggedInState}
+              user={user}
+              search={searchQuery}
+              setSearch={setSearchQuery}
+            />
+          }
         />
         <Route path="/admin" element={<AdminRoute />} />
       </Routes>

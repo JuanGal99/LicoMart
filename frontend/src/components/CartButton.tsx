@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { FiShoppingCart } from "react-icons/fi";
+import { FiMinus, FiPlus, FiShoppingCart, FiTrash2 } from "react-icons/fi";
 import {
+  agregarAlCarrito,
   getCarrito,
   type Carrito,
   eliminarDelCarrito,
@@ -12,6 +13,9 @@ const CartButton: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [updatingProduct, setUpdatingProduct] = useState<number | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadCarrito();
@@ -35,17 +39,58 @@ const CartButton: React.FC = () => {
     }
   };
 
-  const toggleCarrito = () => {
-    setIsOpen(!isOpen);
+  const toggleCarrito = () => setIsOpen((open) => !open);
+
+  const handleCantidad = async (productoId: number, incremento: number) => {
+    setUpdatingProduct(productoId);
+    setError("");
+    try {
+      if (incremento > 0) {
+        await agregarAlCarrito(productoId, 1);
+      } else {
+        await eliminarDelCarrito(productoId, 1);
+      }
+      await loadCarrito();
+      window.dispatchEvent(new Event("carrito:updated"));
+    } catch (error) {
+      console.error("Error al actualizar la cantidad:", error);
+      setError("No se pudo actualizar la cantidad. Inténtalo de nuevo.");
+    } finally {
+      setUpdatingProduct(null);
+    }
   };
 
   const handleEliminar = async (productoId: number) => {
+    const item = carrito[String(productoId)];
+    if (!item) return;
+    setUpdatingProduct(productoId);
+    setError("");
     try {
-      await eliminarDelCarrito(productoId);
+      await eliminarDelCarrito(productoId, item.cantidad);
       await loadCarrito();
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al eliminar del carrito:", error);
+      setError("No se pudo eliminar el producto. Inténtalo de nuevo.");
+    } finally {
+      setUpdatingProduct(null);
+    }
+  };
+
+  const handleVaciar = async () => {
+    setClearing(true);
+    setError("");
+    try {
+      for (const [productoId, item] of Object.entries(carrito)) {
+        await eliminarDelCarrito(Number(productoId), item.cantidad);
+      }
+      await loadCarrito();
+      window.dispatchEvent(new Event("carrito:updated"));
+    } catch (error) {
+      console.error("Error al vaciar el carrito:", error);
+      setError("No se pudo vaciar todo el carrito. Inténtalo de nuevo.");
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -58,68 +103,120 @@ const CartButton: React.FC = () => {
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al confirmar compra:", error);
+      setError("No se pudo enviar el carrito. Inténtalo de nuevo.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const cantidadTotal = Object.values(carrito).reduce(
+    (cantidad, item) => cantidad + item.cantidad,
+    0
+  );
+
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={toggleCarrito}
-        className="border border-white text-white px-2 py-1 rounded flex items-center justify-center hover:bg-white hover:text-black transition cursor-pointer"
+        aria-label={`Carrito de compras, ${cantidadTotal} productos`}
+        aria-expanded={isOpen}
+        className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white transition hover:border-amber-500/50 hover:bg-amber-500/10"
       >
-        <FiShoppingCart className="text-xl" />
-        {Object.keys(carrito).length > 0 && (
-          <span className="bg-red-500 text-white text-xs rounded-full px-1 ml-1">
-            {Object.keys(carrito).length}
+        <FiShoppingCart className="text-lg text-amber-400" />
+        {cantidadTotal > 0 && (
+          <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-[#17130b]">
+            {cantidadTotal}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-[#1A1D21] border border-gray-600 rounded-lg shadow-lg z-50">
-          <div className="p-4">
-            <h3 className="text-white font-semibold mb-3">
-              Carrito de Compras
-            </h3>
+        <div className="absolute right-0 top-full z-50 mt-3 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-white/10 bg-[#17191b] shadow-2xl shadow-black/50 sm:w-96">
+          <div className="p-4 sm:p-5">
+            <h3 className="mb-4 font-semibold text-white">Tu carrito</h3>
             {Object.keys(carrito).length === 0 ? (
-              <p className="text-gray-400">El carrito está vacío</p>
+              <p className="rounded-xl bg-white/[0.03] px-4 py-6 text-center text-sm text-slate-400">
+                El carrito está vacío
+              </p>
             ) : (
-              <div className="space-y-2">
+              <div className="max-h-[55vh] space-y-3 overflow-y-auto">
                 {Object.entries(carrito).map(([productoId, item]) => (
                   <div
                     key={productoId}
-                    className="flex justify-between items-center text-white text-sm"
+                    className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3"
                   >
-                    <span>{item.nombre}</span>
-                    <div className="flex items-center gap-2">
-                      <span>
-                        ${item.precio.toLocaleString()} x {item.cantidad}
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        aria-label={`Disminuir cantidad de ${item.nombre}`}
+                        disabled={updatingProduct !== null || clearing}
+                        onClick={() => void handleCantidad(Number(productoId), -1)}
+                        className="rounded-lg border border-white/10 p-1.5 text-slate-300 transition hover:border-amber-500/50 hover:text-amber-300 disabled:opacity-40"
+                      >
+                        <FiMinus aria-hidden="true" size={14} />
+                      </button>
+                      <span className="min-w-7 text-center text-sm font-semibold text-white">
+                        {item.cantidad}
                       </span>
                       <button
-                        onClick={() => handleEliminar(Number(productoId))}
-                        className="text-red-400 hover:text-red-300 text-xs border border-red-400 px-2 py-0.5 rounded"
+                        type="button"
+                        aria-label={`Aumentar cantidad de ${item.nombre}`}
+                        disabled={updatingProduct !== null || clearing}
+                        onClick={() => void handleCantidad(Number(productoId), 1)}
+                        className="rounded-lg border border-white/10 p-1.5 text-slate-300 transition hover:border-amber-500/50 hover:text-amber-300 disabled:opacity-40"
                       >
-                        Eliminar
+                        <FiPlus aria-hidden="true" size={14} />
                       </button>
                     </div>
+                    <div className="min-w-0 text-sm">
+                      <p className="truncate font-medium text-slate-100">{item.nombre}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        ${(item.precio * item.cantidad).toLocaleString("es-CO")}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Eliminar ${item.nombre} del carrito`}
+                      disabled={updatingProduct !== null || clearing}
+                      onClick={() => void handleEliminar(Number(productoId))}
+                      className="rounded-lg border border-red-500/20 p-2 text-red-400 transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-40"
+                    >
+                      <FiTrash2 aria-hidden="true" size={15} />
+                    </button>
                   </div>
                 ))}
-                <div className="border-t border-gray-600 pt-2 mt-2">
-                  <div className="flex justify-between text-white font-semibold">
-                    <span>Total:</span>
-                    <span>${total.toLocaleString()}</span>
+                <div className="border-t border-white/10 pt-4">
+                  {error && (
+                    <p role="alert" className="mb-3 text-xs text-red-300">
+                      {error}
+                    </p>
+                  )}
+                  <div className="flex justify-between text-sm font-semibold text-white">
+                    <span>Total</span>
+                    <span className="text-amber-300">${total.toLocaleString("es-CO")}</span>
                   </div>
                   <button
+                    type="button"
                     onClick={handleConfirmar}
-                    disabled={submitting}
-                    className="mt-3 w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-semibold rounded px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={submitting || clearing || updatingProduct !== null}
+                    className="mt-4 w-full rounded-xl bg-amber-500 px-3 py-2.5 text-sm font-semibold text-[#19140a] transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {submitting ? "Enviando..." : "Enviar carrito"}
+                    {submitting ? "Enviando…" : "Enviar carrito"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleVaciar()}
+                    disabled={clearing || submitting || updatingProduct !== null}
+                    className="mt-2 w-full rounded-xl border border-red-500/20 px-3 py-2 text-sm font-medium text-red-300 transition hover:border-red-500/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {clearing ? "Vaciando…" : "Vaciar carrito"}
                   </button>
                 </div>
               </div>
+            )}
+            {error && Object.keys(carrito).length === 0 && (
+              <p role="alert" className="mt-3 text-xs text-red-300">{error}</p>
             )}
           </div>
         </div>

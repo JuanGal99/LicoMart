@@ -6,11 +6,13 @@ from .models import Pedidos, DetallePedido
 from django.db.models.functions import Concat
 from django.db.models import Value as V
 from django.views.decorators.csrf import csrf_exempt
+from usuarios.decorators import admin_required
 import json
 
 def pedidos(request):
     return JsonResponse({'success': True, 'message': 'Vista de pedidos'})
 
+@admin_required
 def crear_pedido(request):
     if request.method == "POST":
         pedido_form = PedidoForm(request.POST)
@@ -37,6 +39,7 @@ def crear_pedido(request):
 
 
 @csrf_exempt
+@admin_required
 def crear_pedido_json(request):
     """Crea un pedido y sus detalles desde JSON.
     Body esperado:
@@ -97,33 +100,13 @@ def crear_pedido_json(request):
     return JsonResponse({'success': True, 'message': 'Pedido creado', 'pedido_id': pedido.id, 'detalles_creados': created_count})
 
 
-@csrf_exempt
 def actualizar_estado_pedido(request, pedido_id: int):
-    """Actualiza el estado de un pedido. Body: {"estado": "Completado"} """
-    if request.method not in ['PATCH', 'POST']:
-        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
-    try:
-        payload = json.loads(request.body or '{}')
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'JSON inválido'}, status=400)
+    from .admin_views import admin_actualizar_pedido
 
-    nuevo_estado = payload.get('estado')
-    if nuevo_estado not in ['Pendiente', 'En Proceso', 'Completado', 'Cancelado']:
-        return JsonResponse({'success': False, 'error': 'Estado inválido'}, status=400)
-
-    try:
-        pedido = Pedidos.objects.get(id=pedido_id)
-    except Pedidos.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Pedido no encontrado'}, status=404)
-
-    pedido.estado = nuevo_estado
-    # Si se marca como Completado, actualiza la fecha al día actual
-    if nuevo_estado == 'Completado':
-        pedido.fecha = datetime.date.today()
-    pedido.save()
-    return JsonResponse({'success': True, 'message': 'Estado actualizado', 'pedido_id': pedido.id, 'estado': pedido.estado})
+    return admin_actualizar_pedido(request, pedido_id)
 
 
+@admin_required
 def kpis(request):
     """Devuelve KPIs básicos: pedidos activos, pendientes e ingresos del mes."""
     hoy = datetime.date.today()
@@ -135,6 +118,7 @@ def kpis(request):
     ingresos_mes = (
         DetallePedido.objects
             .filter(
+                id_pedido__pago_confirmado=True,
                 id_pedido__estado='Completado',
                 id_pedido__fecha__gte=primer_dia_mes,
                 id_pedido__fecha__lte=hoy,
@@ -153,6 +137,7 @@ def kpis(request):
     })
 
 
+@admin_required
 def top_vendidos(request):
     """Top productos por unidades vendidas (sumatoria de cantidad en detalles)."""
     try:
@@ -175,6 +160,7 @@ def top_vendidos(request):
     return JsonResponse({'success': True, 'data': data})
 
 
+@admin_required
 def pedidos_recientes(request):
     """Lista de pedidos recientes con cliente, estado y fecha."""
     try:
@@ -198,6 +184,7 @@ def pedidos_recientes(request):
     return JsonResponse({'success': True, 'data': data})
 
 
+@admin_required
 def pedidos_recientes(request):
     # Lista de pedidos recientes con cliente, estado y fecha.
     try:
@@ -217,6 +204,7 @@ def pedidos_recientes(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+@admin_required
 def pedidos_completados(request):
     # Lista de pedidos completados con todos los detalles necesarios para la tabla
     try:

@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_URL = "http://10.6.101.152:8000";
-
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: "/",
   withCredentials: true,
+  xsrfCookieName: "csrftoken",
+  xsrfHeaderName: "X-CSRFToken",
   headers: {
     "Content-Type": "application/json",
   },

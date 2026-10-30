@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 
 echo "Esperando a que la base de datos esté lista..."
 
@@ -22,7 +23,7 @@ do
 done
 
 echo "Base de datos lista, corriendo migraciones..."
-python manage.py migrate
+python manage.py migrate --noinput
 
 echo "Levantando servidor Django..."
 python manage.py runserver 0.0.0.0:8000

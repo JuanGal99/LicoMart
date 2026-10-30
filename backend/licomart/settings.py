@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +22,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i!ud6*nqko+6a92q&05h&)p5@ud$t(@ns!zm@sdkc76&#6ipps'
+DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in {"1", "true", "yes", "on"}
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "local-development-only-rotate-this-secret-key-before-deploying-7b6e",
+)
+if not DEBUG and "DJANGO_SECRET_KEY" not in os.environ:
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY must be configured outside development.")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,backend"
+    ).split(",")
+    if host.strip()
+]
 
 
 # Application definition
@@ -148,6 +158,17 @@ CORS_ALLOW_ALL_HEADERS = True
 
 # Permitir todos los métodos HTTP
 CORS_ALLOW_ALL_ORIGINS = False
+
+SECURE_SSL_REDIRECT = os.environ.get(
+    "DJANGO_SECURE_SSL_REDIRECT", "false"
+).lower() in {"1", "true", "yes", "on"}
+SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", "0"))
+SESSION_COOKIE_SECURE = os.environ.get(
+    "DJANGO_SESSION_COOKIE_SECURE", "false"
+).lower() in {"1", "true", "yes", "on"}
+CSRF_COOKIE_SECURE = os.environ.get(
+    "DJANGO_CSRF_COOKIE_SECURE", "false"
+).lower() in {"1", "true", "yes", "on"}
 
 # Configuración de archivos multimedia
 MEDIA_URL = '/media/'  # URL para acceder a los archivos multimedia

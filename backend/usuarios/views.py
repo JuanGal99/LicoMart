@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.csrf import csrf_exempt
 from .models import Usuarios
 import json
@@ -23,6 +24,7 @@ def login_view(request):
                 usuario = Usuarios.objects.get(email=identifier)
 
             if usuario.check_password(password):
+                request.session.cycle_key()
                 request.session['usuario_id'] = usuario.id  # Si manejas sesión
                 return JsonResponse({
                     'success': True,
@@ -38,6 +40,29 @@ def login_view(request):
             return JsonResponse({'success': False, 'error': 'Usuario o correo no encontrado'})
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+
+@ensure_csrf_cookie
+def csrf_token_view(request):
+    return JsonResponse({"success": True})
+
+
+def current_user_view(request):
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return JsonResponse({"authenticated": False}, status=401)
+    try:
+        usuario = Usuarios.objects.get(pk=usuario_id)
+    except Usuarios.DoesNotExist:
+        request.session.flush()
+        return JsonResponse({"authenticated": False}, status=401)
+    return JsonResponse({
+        "authenticated": True,
+        "usuario_id": usuario.id,
+        "nombre": usuario.nombre,
+        "email": usuario.email,
+        "rol": usuario.rol,
+    })
 
 
 @csrf_exempt
@@ -71,8 +96,7 @@ def register_view(request):
 @csrf_exempt
 def singout(request):
     if request.method == 'POST':
-        if 'usuario_id' in request.session:
-            del request.session['usuario_id']
+        request.session.flush()
         return JsonResponse({'success': True, 'message': 'Sesión cerrada exitosamente'})
     
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

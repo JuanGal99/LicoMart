@@ -4,7 +4,7 @@ const Logo: React.FC = () => {
   return (
     <Link
       to="/"
-      className="text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent from-[#2563EB] to-[#FFC300]"
+      className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl"
     >
       LicoMart
     </Link>
