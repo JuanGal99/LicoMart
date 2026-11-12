@@ -31,13 +31,13 @@ class DetallePedido(models.Model):
     id_pedido = models.ForeignKey(Pedidos, on_delete=models.CASCADE, related_name='detalles')
     id_producto = models.ForeignKey(Productos, on_delete=models.CASCADE)
     cantidad = models.IntegerField()
-    subtotal = models.FloatField(editable=False)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
     precio_unitario = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def save(self, *args, **kwargs):
         if self._state.adding:
             self.precio_unitario = self.id_producto.precio
-        self.subtotal = self.cantidad * float(self.precio_unitario)
+        self.subtotal = self.cantidad * self.precio_unitario
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -3,24 +3,20 @@ from datetime import date
 
 from django.db import transaction
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
 from pedidos.models import DetallePedido, MovimientoInventario, Pedidos
 from productos.models import Productos
 from usuarios.models import Usuarios
 
 
 def _total(carrito):
-    return sum(float(item["precio"]) * int(item["cantidad"]) for item in carrito.values())
+    return sum(float(item["precio"]) * int(item["cantidad"]) for item in carrito.values()) if carrito else 0
 
 
-@csrf_exempt
 def ver_carrito(request):
     carrito = request.session.get("carrito", {})
     return JsonResponse({"carrito": carrito, "total": _total(carrito)})
 
 
-@csrf_exempt
 @transaction.atomic
 def confirmar_compra(request):
     if request.method != "POST":
@@ -106,7 +102,6 @@ def confirmar_compra(request):
     })
 
 
-@csrf_exempt
 def agregar_al_carrito(request, producto_id):
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
@@ -135,7 +130,7 @@ def agregar_al_carrito(request, producto_id):
     else:
         carrito[key] = {
             "nombre": producto.nombre,
-            "precio": producto.precio,
+            "precio": float(producto.precio),
             "cantidad": cantidad,
         }
     request.session["carrito"] = carrito
@@ -147,7 +142,6 @@ def agregar_al_carrito(request, producto_id):
     })
 
 
-@csrf_exempt
 def eliminar_del_carrito(request, producto_id):
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)

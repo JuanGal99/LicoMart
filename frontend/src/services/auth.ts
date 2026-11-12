@@ -43,7 +43,13 @@ export function saveUserToStorage(user: User) {
 export function getUserFromStorage(): User | null {
   const userStr = localStorage.getItem("user");
   if (userStr) {
-    return JSON.parse(userStr);
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      localStorage.removeItem("user");
+      localStorage.removeItem("isLoggedIn");
+      return null;
+    }
   }
   return null;
 }

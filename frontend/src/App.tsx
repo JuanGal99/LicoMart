@@ -36,11 +36,6 @@ function App() {
     setIsLoggedInState(false);
   };
 
-  const AdminRoute = () => {
-    if (isLoggedInState && user?.rol === "admin") return <Admin onLogout={handleLogout} />;
-    return <Navigate to="/" replace />;
-  };
-
   return (
     <BrowserRouter>
       <Navbar
@@ -64,7 +59,11 @@ function App() {
             />
           }
         />
-        <Route path="/admin" element={<AdminRoute />} />
+        <Route path="/admin" element={
+          isLoggedInState && user?.rol === "admin"
+            ? <Admin onLogout={handleLogout} />
+            : <Navigate to="/" replace />
+        } />
       </Routes>
     </BrowserRouter>
   );

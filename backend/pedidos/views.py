@@ -1,13 +1,12 @@
-from django.http import JsonResponse
 import datetime
-from .forms import PedidoForm, DetallePedidoFormSet
-from django.db.models import Sum, F
-from .models import Pedidos, DetallePedido
-from django.db.models.functions import Concat
-from django.db.models import Value as V
-from django.views.decorators.csrf import csrf_exempt
-from usuarios.decorators import admin_required
 import json
+
+from django.db.models import Sum
+from django.http import JsonResponse
+
+from .forms import PedidoForm, DetallePedidoFormSet
+from .models import DetallePedido, MovimientoInventario, Pedidos
+from usuarios.decorators import admin_required
 
 def pedidos(request):
     return JsonResponse({'success': True, 'message': 'Vista de pedidos'})
@@ -22,7 +21,7 @@ def crear_pedido(request):
             pedido = pedido_form.save(commit=False)
             if isinstance(pedido.fecha, str):
                 try:
-                    pedido.fecha = datetime.strptime(pedido.fecha, '%Y-%m-%d').date()
+                    pedido.fecha = datetime.datetime.strptime(pedido.fecha, '%Y-%m-%d').date()
                 except ValueError:
                     return JsonResponse({'success': False, 'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'})
 
@@ -38,7 +37,6 @@ def crear_pedido(request):
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 
-@csrf_exempt
 @admin_required
 def crear_pedido_json(request):
     """Crea un pedido y sus detalles desde JSON.
@@ -94,7 +92,21 @@ def crear_pedido_json(request):
             prod = Productos.objects.get(id=pid)
         except Productos.DoesNotExist:
             continue
+        if prod.stock < cantidad:
+            continue
+        anterior = prod.stock
+        prod.stock -= cantidad
+        prod.save(update_fields=["stock"])
         DetallePedido.objects.create(id_pedido=pedido, id_producto=prod, cantidad=cantidad)
+        MovimientoInventario.objects.create(
+            producto=prod,
+            tipo="salida",
+            cantidad=cantidad,
+            stock_anterior=anterior,
+            stock_nuevo=prod.stock,
+            motivo=f"Pedido admin #{pedido.id}",
+            clave_idempotencia=f"pedido-admin:{pedido.id}:reserva:{prod.id}",
+        )
         created_count += 1
 
     return JsonResponse({'success': True, 'message': 'Pedido creado', 'pedido_id': pedido.id, 'detalles_creados': created_count})
@@ -184,24 +196,6 @@ def pedidos_recientes(request):
     return JsonResponse({'success': True, 'data': data})
 
 
-@admin_required
-def pedidos_recientes(request):
-    # Lista de pedidos recientes con cliente, estado y fecha.
-    try:
-        limit = int(request.GET.get('limit', 10))
-        pedidos = (Pedidos.objects
-                   .select_related('id_usuario')
-                   .order_by('-fecha', '-id')[:limit])
-        
-        data = [{
-            'id': p.id,
-            'cliente': p.id_usuario.nombre,
-            'estado': p.estado,
-            'fecha': p.fecha.strftime('%Y-%m-%d')
-        } for p in pedidos]
-        return JsonResponse({'success': True, 'data': data})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @admin_required
@@ -275,5 +269,5 @@ def pedidos_completados(request):
                 return JsonResponse({'success': True, 'data': []})
         
         return JsonResponse({'success': True, 'data': data})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    except Exception:
+        return JsonResponse({'success': False, 'error': 'Error interno del servidor'}, status=500)

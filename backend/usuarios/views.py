@@ -1,10 +1,9 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.csrf import csrf_exempt
 from .models import Usuarios
 import json
 
-@csrf_exempt
+@ensure_csrf_cookie
 def login_view(request):
     if request.method == 'POST':
         try:
@@ -65,7 +64,6 @@ def current_user_view(request):
     })
 
 
-@csrf_exempt
 def register_view(request):
     if request.method == 'POST':
         try:
@@ -93,7 +91,6 @@ def register_view(request):
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 
-@csrf_exempt
 def singout(request):
     if request.method == 'POST':
         request.session.flush()

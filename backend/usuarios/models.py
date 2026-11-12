@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password, check_password
 class Usuarios(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     email = models.EmailField(max_length=254, unique=True)
-    contraseña = models.CharField(max_length=100)
+    contraseña = models.CharField(max_length=256)
     rol = models.CharField(max_length=50, default='usuario')
 
     def set_password(self, raw_password):

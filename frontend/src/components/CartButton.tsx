@@ -50,7 +50,6 @@ const CartButton: React.FC = () => {
       } else {
         await eliminarDelCarrito(productoId, 1);
       }
-      await loadCarrito();
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al actualizar la cantidad:", error);
@@ -67,7 +66,6 @@ const CartButton: React.FC = () => {
     setError("");
     try {
       await eliminarDelCarrito(productoId, item.cantidad);
-      await loadCarrito();
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al eliminar del carrito:", error);
@@ -84,7 +82,6 @@ const CartButton: React.FC = () => {
       for (const [productoId, item] of Object.entries(carrito)) {
         await eliminarDelCarrito(Number(productoId), item.cantidad);
       }
-      await loadCarrito();
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al vaciar el carrito:", error);
@@ -99,7 +96,6 @@ const CartButton: React.FC = () => {
     setSubmitting(true);
     try {
       await confirmarCompra();
-      await loadCarrito();
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al confirmar compra:", error);

@@ -6,7 +6,7 @@ from .models import Pedidos, DetallePedido
 class PedidoForm(ModelForm):
     class Meta:
         model = Pedidos
-        fields = '__all__'
+        fields = ['id_usuario', 'fecha', 'estado']
         widgets = {
             'fecha': DateInput(attrs={'type': 'date'})
         }

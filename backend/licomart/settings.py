@@ -159,6 +159,11 @@ CORS_ALLOW_ALL_HEADERS = True
 # Permitir todos los métodos HTTP
 CORS_ALLOW_ALL_ORIGINS = False
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 SECURE_SSL_REDIRECT = os.environ.get(
     "DJANGO_SECURE_SSL_REDIRECT", "false"
 ).lower() in {"1", "true", "yes", "on"}
@@ -169,6 +174,9 @@ SESSION_COOKIE_SECURE = os.environ.get(
 CSRF_COOKIE_SECURE = os.environ.get(
     "DJANGO_CSRF_COOKIE_SECURE", "false"
 ).lower() in {"1", "true", "yes", "on"}
+
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 # Configuración de archivos multimedia
 MEDIA_URL = '/media/'  # URL para acceder a los archivos multimedia

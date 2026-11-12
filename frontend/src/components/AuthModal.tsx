@@ -92,7 +92,7 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
         {/* Botones login/registro estilo toggle */}
         <div className="flex bg-[#2A2D31] rounded-lg p-1 mb-4">
           <button
-            onClick={() => setIsLogin(true)}
+            onClick={() => { setIsLogin(true); setError(""); setForm({ identifier: "", password: "", username: "", email: "" }); }}
             className={`flex-1 py-2 rounded-md transition ${
               isLogin
                 ? "bg-[#1A1D21] text-white"
@@ -102,7 +102,7 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
             Iniciar Sesión
           </button>
           <button
-            onClick={() => setIsLogin(false)}
+            onClick={() => { setIsLogin(false); setError(""); setForm({ identifier: "", password: "", username: "", email: "" }); }}
             className={`flex-1 py-2 rounded-md transition ${
               !isLogin
                 ? "bg-[#1A1D21] text-white"
