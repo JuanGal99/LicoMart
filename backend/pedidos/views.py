@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.db import transaction
 from django.db.models import Sum
 from django.http import JsonResponse
 
@@ -37,6 +38,7 @@ def crear_pedido(request):
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 
+@transaction.atomic
 @admin_required
 def crear_pedido_json(request):
     """Crea un pedido y sus detalles desde JSON.
@@ -89,7 +91,7 @@ def crear_pedido_json(request):
         if not pid or not cantidad or cantidad <= 0:
             continue
         try:
-            prod = Productos.objects.get(id=pid)
+            prod = Productos.objects.select_for_update().get(id=pid)
         except Productos.DoesNotExist:
             continue
         if prod.stock < cantidad:

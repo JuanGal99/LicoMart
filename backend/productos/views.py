@@ -83,7 +83,7 @@ def lista_productos(request):
             "marca": producto.marca,
             "descripcion": producto.descripcion,
             "stock": producto.stock,
-            "precio": producto.precio,
+            "precio": float(producto.precio),
             "imagen": producto.imagen,
             "categoria": {
                 "id": producto.categoria_id,
