@@ -61,9 +61,12 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
           setError(data.error || "Error al registrar");
         }
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(`Error de conexión: ${error.message}`);
+    } catch (err: unknown) {
+      const axios = await import("axios");
+      if (axios.default.isAxiosError(err) && err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err instanceof Error) {
+        setError(`Error de conexión: ${err.message}`);
       } else {
         setError("Error de conexión");
       }

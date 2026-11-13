@@ -19,7 +19,6 @@ class DetallePedidoForm(ModelForm):
 
 DetallePedidoFormSet = modelformset_factory(
     DetallePedido,
-    fields='__all__',
-    exclude=['subtotal'],
-    extra=1
+    fields=['id_producto', 'cantidad'],
+    extra=1,
 )
