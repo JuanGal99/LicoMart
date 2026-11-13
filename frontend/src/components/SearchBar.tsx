@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import { getProductos } from "../services/productos";
 import type { Producto } from "../services";
@@ -8,6 +9,7 @@ const SearchBar: React.FC<{
   onChange: (v: string) => void;
   className?: string;
 }> = ({ value, onChange, className = "w-80" }) => {
+  const navigate = useNavigate();
   const suggestionsId = useId();
   const [suggestions, setSuggestions] = useState<Producto[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -37,9 +39,10 @@ const SearchBar: React.FC<{
   }, [value]);
 
   const selectSuggestion = (producto: Producto) => {
-    onChange(producto.nombre);
+    onChange("");
     setIsOpen(false);
     setActiveIndex(-1);
+    navigate(`/producto/${producto.id}`);
   };
 
   return (

@@ -162,7 +162,7 @@ export default function ProductDetail({ isLoggedIn, user }: Props) {
                 {producto.marca}
               </p>
             )}
-            <h1 className="mt-2 text-3xl font-bold">{producto.nombre}</h1>
+            <h1 className="font-display mt-2 text-3xl font-bold">{producto.nombre}</h1>
             <p className="mt-4 leading-relaxed text-slate-400">
               {producto.descripcion || "Este producto aún no tiene una descripción detallada."}
             </p>
@@ -189,7 +189,7 @@ export default function ProductDetail({ isLoggedIn, user }: Props) {
 
         {relacionados.length > 0 && (
           <section className="mt-16">
-            <h2 className="mb-6 text-xl font-semibold">Productos relacionados</h2>
+            <h2 className="font-display mb-6 text-xl font-bold">Productos relacionados</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {relacionados.map((rel) => (
                 <Link

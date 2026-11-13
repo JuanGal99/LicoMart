@@ -177,12 +177,17 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#17140e] via-[#101316] to-[#0b0d0f] px-4 py-8 text-white sm:px-6 lg:px-8">
       <main className="mx-auto max-w-7xl">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          {isLoggedIn && user && (
-            <p className="text-sm text-slate-300">
-              Bienvenido, <span className="font-semibold">{user.nombre}</span>
-            </p>
-          )}
+        <header className="mb-10">
+          <h1 className="font-display text-3xl font-bold sm:text-4xl">
+            <span className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
+              Catálogo
+            </span>
+          </h1>
+          <p className="mt-2 max-w-lg text-slate-400">
+            {isLoggedIn && user
+              ? `Bienvenido, ${user.nombre}. Explora nuestra selección y encuentra lo que necesitas.`
+              : "Explora nuestra selección de licores y encuentra lo que buscas."}
+          </p>
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
@@ -384,9 +389,11 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
                         {producto.marca}
                       </p>
                     )}
-                    <Link to={`/producto/${producto.id}`} className="mt-1 block text-base font-semibold leading-snug text-white hover:text-amber-300 transition">
-                      {producto.nombre}
-                    </Link>
+                    <h2 className="mt-1 text-base font-semibold leading-snug text-white">
+                      <Link to={`/producto/${producto.id}`} className="hover:text-amber-300 transition">
+                        {producto.nombre}
+                      </Link>
+                    </h2>
                     <p className="mt-2 line-clamp-2 min-h-10 text-sm text-slate-400">
                       {producto.descripcion || "Descubre este producto en LicoMart."}
                     </p>

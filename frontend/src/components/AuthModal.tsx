@@ -5,7 +5,7 @@ import {
   saveUserToStorage,
   type User,
 } from "../services/auth";
-import { FaEnvelope, FaLock } from "react-icons/fa"; // usando react-icons
+import { FaEnvelope, FaLock, FaUser } from "react-icons/fa";
 
 type Props = {
   visible: boolean;
@@ -30,6 +30,8 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const resetForm = () => setForm({ identifier: "", password: "", username: "", email: "" });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -51,11 +53,7 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
           setError(data.error || "Error al iniciar sesión");
         }
       } else {
-        const data = await registerUser(
-          form.username,
-          form.email,
-          form.password
-        );
+        const data = await registerUser(form.username, form.email, form.password);
         if (data.success) {
           const loginData = await loginUser(form.username, form.password);
           if (loginData.success) {
@@ -90,121 +88,159 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
     }
   };
 
+  const inputClass =
+    "mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b0d0f] px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10";
+  const iconInputClass =
+    "mt-1.5 flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0d0f] px-3 transition focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/10";
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-[#1A1D21] p-6 rounded-xl w-full max-w-sm relative shadow-lg" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-[#15181d] p-6 shadow-2xl shadow-black/40"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-white"
+          type="button"
+          aria-label="Cerrar"
+          className="absolute right-4 top-4 rounded-lg p-1 text-slate-500 transition hover:bg-white/5 hover:text-white"
           onClick={onClose}
         >
-          ✕
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
         </button>
 
-        {/* Encabezado */}
-        <h2 className="text-white font-semibold text-lg mb-1">
-          Accede a tu cuenta
+        <h2 className="font-display text-xl font-bold text-white">
+          {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
         </h2>
-        <p className="text-[#94A3B8] text-sm mb-3">
-          Inicia sesión en tu cuenta existente o crea una nueva cuenta para
-          acceder a todas las funcionalidades
+        <p className="mt-1 text-sm text-slate-400">
+          {isLogin
+            ? "Ingresa tus credenciales para continuar."
+            : "Regístrate para acceder al catálogo completo."}
         </p>
 
-        {/* Botones login/registro estilo toggle */}
-        <div className="flex bg-[#2A2D31] rounded-lg p-1 mb-4">
+        <div className="mt-5 flex rounded-xl bg-white/[0.04] p-1">
           <button
-            onClick={() => { setIsLogin(true); setError(""); setForm({ identifier: "", password: "", username: "", email: "" }); }}
-            className={`flex-1 py-2 rounded-md transition ${
+            type="button"
+            onClick={() => { setIsLogin(true); setError(""); resetForm(); }}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
               isLogin
-                ? "bg-[#1A1D21] text-white"
-                : "bg-transparent text-gray-400 hover:text-white"
+                ? "bg-amber-500/15 text-amber-300"
+                : "text-slate-400 hover:text-white"
             }`}
           >
-            Iniciar Sesión
+            Iniciar sesión
           </button>
           <button
-            onClick={() => { setIsLogin(false); setError(""); setForm({ identifier: "", password: "", username: "", email: "" }); }}
-            className={`flex-1 py-2 rounded-md transition ${
+            type="button"
+            onClick={() => { setIsLogin(false); setError(""); resetForm(); }}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
               !isLogin
-                ? "bg-[#1A1D21] text-white"
-                : "bg-transparent text-gray-400 hover:text-white"
+                ? "bg-amber-500/15 text-amber-300"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             Registrarse
           </button>
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-1">
+        <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3">
           {isLogin ? (
             <>
-              <p className="text-white">Correo</p>
-              <div className="flex items-center bg-black border border-gray-600 rounded-lg px-2">
-                <FaEnvelope className="text-gray-400 w-5 h-5 mr-2" />
-                <input
-                  name="identifier"
-                  type="text"
-                  placeholder="tu@email.com"
-                  value={form.identifier}
-                  onChange={handleChange}
-                  className="p-2 w-full bg-transparent text-white focus:outline-none"
-                  required
-                />
-              </div>
-              <p className="text-white">Contraseña</p>
-              <div className="flex items-center bg-black border border-gray-600 rounded-lg px-2">
-                <FaLock className="text-gray-400 w-5 h-5 mr-2" />
-                <input
-                  name="password"
-                  type="password"
-                  placeholder="Contraseña"
-                  value={form.password}
-                  onChange={handleChange}
-                  className="p-2 w-full bg-transparent text-white focus:outline-none"
-                  required
-                />
-              </div>
+              <label className="text-xs font-medium text-slate-400">
+                Correo o usuario
+                <div className={iconInputClass}>
+                  <FaEnvelope className="shrink-0 text-slate-500" size={14} />
+                  <input
+                    name="identifier"
+                    type="text"
+                    placeholder="tu@email.com"
+                    value={form.identifier}
+                    onChange={handleChange}
+                    className="w-full bg-transparent py-2.5 text-sm text-white outline-none placeholder:text-slate-600"
+                    required
+                  />
+                </div>
+              </label>
+              <label className="text-xs font-medium text-slate-400">
+                Contraseña
+                <div className={iconInputClass}>
+                  <FaLock className="shrink-0 text-slate-500" size={14} />
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="Contraseña"
+                    value={form.password}
+                    onChange={handleChange}
+                    className="w-full bg-transparent py-2.5 text-sm text-white outline-none placeholder:text-slate-600"
+                    required
+                  />
+                </div>
+              </label>
             </>
           ) : (
             <>
-              <p className="text-white">Username</p>
-              <input
-                name="username"
-                type="text"
-                placeholder="Usuario"
-                value={form.username}
-                onChange={handleChange}
-                className="p-2 rounded-lg bg-black text-white border border-gray-600"
-                required
-              />
-              <p className="text-white">Correo</p>
-              <input
-                name="email"
-                type="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={handleChange}
-                className="p-2 rounded-lg bg-black text-white border border-gray-600"
-                required
-              />
-              <p className="text-white">Contraseña</p>
-              <input
-                name="password"
-                type="password"
-                placeholder="Contraseña"
-                value={form.password}
-                onChange={handleChange}
-                className="p-2 rounded-lg bg-black text-white border border-gray-600"
-                required
-              />
+              <label className="text-xs font-medium text-slate-400">
+                Nombre de usuario
+                <div className={iconInputClass}>
+                  <FaUser className="shrink-0 text-slate-500" size={14} />
+                  <input
+                    name="username"
+                    type="text"
+                    placeholder="Usuario"
+                    value={form.username}
+                    onChange={handleChange}
+                    className="w-full bg-transparent py-2.5 text-sm text-white outline-none placeholder:text-slate-600"
+                    required
+                  />
+                </div>
+              </label>
+              <label className="text-xs font-medium text-slate-400">
+                Correo electrónico
+                <div className={iconInputClass}>
+                  <FaEnvelope className="shrink-0 text-slate-500" size={14} />
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={form.email}
+                    onChange={handleChange}
+                    className="w-full bg-transparent py-2.5 text-sm text-white outline-none placeholder:text-slate-600"
+                    required
+                  />
+                </div>
+              </label>
+              <label className="text-xs font-medium text-slate-400">
+                Contraseña
+                <div className={iconInputClass}>
+                  <FaLock className="shrink-0 text-slate-500" size={14} />
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="Contraseña"
+                    value={form.password}
+                    onChange={handleChange}
+                    className="w-full bg-transparent py-2.5 text-sm text-white outline-none placeholder:text-slate-600"
+                    required
+                  />
+                </div>
+              </label>
             </>
           )}
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <p role="alert" className="rounded-lg border border-red-500/20 bg-red-950/20 px-3 py-2 text-sm text-red-300">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-1 rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-[#19140a] transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Cargando…" : isLogin ? "Iniciar Sesión" : "Registrarse"}
+            {loading ? "Cargando…" : isLogin ? "Iniciar sesión" : "Crear cuenta"}
           </button>
         </form>
       </div>

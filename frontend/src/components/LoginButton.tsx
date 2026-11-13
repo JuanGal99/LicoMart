@@ -14,7 +14,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({
   return (
     <button
       onClick={onClick}
-      className="text-white border border-white flex items-center gap-2 px-2 py-1 rounded hover:bg-white hover:text-black transition cursor-pointer"
+      className="text-white border border-white/20 flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/10 transition cursor-pointer"
     >
       {icon}
       <span className="text-sm font-medium">{label}</span>

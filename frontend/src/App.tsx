@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
 import Navbar from "./components/Navbar";
 import Admin from "./pages/Admin";
+import Footer from "./components/Footer";
 import {
   isLoggedIn,
   getUserFromStorage,
@@ -85,13 +86,19 @@ function App() {
             : <Navigate to="/" replace />
         } />
         <Route path="*" element={
-          <div className="flex min-h-screen flex-col items-center justify-center bg-[#0b0d0f] text-white">
-            <h1 className="text-6xl font-bold text-amber-500">404</h1>
-            <p className="mt-4 text-lg text-slate-400">Página no encontrada</p>
-            <a href="/" className="mt-6 rounded-xl bg-amber-500 px-5 py-2.5 font-semibold text-[#19140a] transition hover:bg-amber-400">Volver al inicio</a>
+          <div className="flex min-h-screen flex-col items-center justify-center bg-[#0b0d0f] px-4 text-white">
+            <p className="font-display text-8xl font-bold text-amber-500/20 sm:text-9xl">404</p>
+            <h1 className="mt-2 text-2xl font-bold">Página no encontrada</h1>
+            <p className="mt-3 max-w-sm text-center text-slate-400">
+              La página que buscas no existe o fue movida. Vuelve al catálogo para seguir explorando.
+            </p>
+            <a href="/" className="mt-8 rounded-xl bg-amber-500 px-6 py-3 font-semibold text-[#19140a] transition hover:bg-amber-400">
+              Volver al catálogo
+            </a>
           </div>
         } />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }

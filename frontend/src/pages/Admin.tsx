@@ -371,7 +371,7 @@ export default function Admin({ onLogout }: { onLogout: () => void }) {
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#15181d] p-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">LicoMart · Gestión</p>
-            <h1 className="mt-1 text-2xl font-bold">Panel administrativo</h1>
+            <h1 className="font-display mt-1 text-2xl font-bold">Panel administrativo</h1>
             <p className="mt-1 text-sm text-slate-400">Ventas, inventario y finanzas en un solo lugar.</p>
           </div>
           <button

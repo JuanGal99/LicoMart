@@ -1,12 +1,21 @@
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-from django.http import JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie
-from .models import Usuarios
 import json
 
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_http_methods, require_POST
+
+from django.db.models import Q
+
+from .models import Usuarios
+
 @ensure_csrf_cookie
+@require_http_methods(["GET", "POST"])
 def login_view(request):
+    if request.method == "GET":
+        return JsonResponse({"success": True})
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -19,10 +28,9 @@ def login_view(request):
             return JsonResponse({'success': False, 'error': 'Faltan campos'}, status=400)
 
         try:
-            try:
-                usuario = Usuarios.objects.get(nombre=identifier)
-            except Usuarios.DoesNotExist:
-                usuario = Usuarios.objects.get(email=identifier)
+            usuario = Usuarios.objects.get(
+                Q(nombre=identifier) | Q(email=identifier)
+            )
 
             if usuario.check_password(password):
                 request.session.cycle_key()
@@ -40,7 +48,6 @@ def login_view(request):
         except Usuarios.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Usuario o correo no encontrado'}, status=401)
 
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 
 @ensure_csrf_cookie
@@ -66,41 +73,45 @@ def current_user_view(request):
     })
 
 
+@require_POST
 def register_view(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            username = data.get('username')
-            email = data.get('email')
-            password = data.get('password')
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'JSON inválido'}, status=400)
+    try:
+        data = json.loads(request.body)
+        username = str(data.get('username', '')).strip()
+        email = str(data.get('email', '')).strip().lower()
+        password = data.get('password')
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'JSON inválido'}, status=400)
 
-        if not username or not email or not password:
-            return JsonResponse({'success': False, 'error': 'Faltan campos obligatorios'}, status=400)
+    if not username or not email or not password:
+        return JsonResponse({'success': False, 'error': 'Faltan campos obligatorios'}, status=400)
 
-        try:
-            validate_password(password)
-        except ValidationError as e:
-            return JsonResponse({'success': False, 'error': e.messages[0]}, status=400)
+    if len(username) > 60:
+        return JsonResponse({'success': False, 'error': 'El nombre de usuario es demasiado largo (máximo 60 caracteres).'}, status=400)
 
-        if Usuarios.objects.filter(nombre=username).exists():
-            return JsonResponse({'success': False, 'error': 'El nombre de usuario ya está en uso.'}, status=409)
-        if Usuarios.objects.filter(email=email).exists():
-            return JsonResponse({'success': False, 'error': 'El correo ya está en uso.'}, status=409)
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({'success': False, 'error': 'El formato del correo no es válido.'}, status=400)
 
-        nuevo_usuario = Usuarios(nombre=username, email=email, rol='usuario')
-        nuevo_usuario.set_password(password)
-        nuevo_usuario.save()
+    try:
+        validate_password(password)
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'error': e.messages[0]}, status=400)
 
-        return JsonResponse({'success': True, 'message': 'Usuario registrado exitosamente'})
+    if Usuarios.objects.filter(nombre=username).exists():
+        return JsonResponse({'success': False, 'error': 'El nombre de usuario ya está en uso.'}, status=409)
+    if Usuarios.objects.filter(email=email).exists():
+        return JsonResponse({'success': False, 'error': 'El correo ya está en uso.'}, status=409)
 
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    nuevo_usuario = Usuarios(nombre=username, email=email, rol='usuario')
+    nuevo_usuario.set_password(password)
+    nuevo_usuario.save()
+
+    return JsonResponse({'success': True, 'message': 'Usuario registrado exitosamente'})
 
 
+@require_POST
 def singout(request):
-    if request.method == 'POST':
-        request.session.flush()
-        return JsonResponse({'success': True, 'message': 'Sesión cerrada exitosamente'})
-    
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    request.session.flush()
+    return JsonResponse({'success': True, 'message': 'Sesión cerrada exitosamente'})
