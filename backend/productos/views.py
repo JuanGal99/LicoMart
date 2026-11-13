@@ -32,6 +32,7 @@ def lista_productos(request):
             Q(nombre__icontains=busqueda) | Q(marca__icontains=busqueda)
         )
 
+    precio_vals = {}
     for parametro, campo, operador in (
         ("precio_min", "precio__gte", "mínimo"),
         ("precio_max", "precio__lte", "máximo"),
@@ -51,17 +52,21 @@ def lista_productos(request):
                 {"error": f"El precio {operador} debe ser un número finito."},
                 status=400,
             )
-        productos = productos.filter(**{campo: precio})
+        precio_vals[parametro] = precio
 
     if (
-        request.GET.get("precio_min") not in (None, "")
-        and request.GET.get("precio_max") not in (None, "")
-        and float(request.GET["precio_min"]) > float(request.GET["precio_max"])
+        "precio_min" in precio_vals
+        and "precio_max" in precio_vals
+        and precio_vals["precio_min"] > precio_vals["precio_max"]
     ):
         return JsonResponse(
             {"error": "El precio mínimo no puede superar el precio máximo."},
             status=400,
         )
+
+    for parametro, campo in (("precio_min", "precio__gte"), ("precio_max", "precio__lte")):
+        if parametro in precio_vals:
+            productos = productos.filter(**{campo: precio_vals[parametro]})
 
     ordenamientos = {
         "precio_asc": "precio",

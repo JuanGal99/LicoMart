@@ -16,6 +16,7 @@ const CartButton: React.FC = () => {
   const [updatingProduct, setUpdatingProduct] = useState<number | null>(null);
   const [clearing, setClearing] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     loadCarrito();
@@ -44,6 +45,7 @@ const CartButton: React.FC = () => {
   const handleCantidad = async (productoId: number, incremento: number) => {
     setUpdatingProduct(productoId);
     setError("");
+    setSuccess("");
     try {
       if (incremento > 0) {
         await agregarAlCarrito(productoId, 1);
@@ -94,8 +96,10 @@ const CartButton: React.FC = () => {
   const handleConfirmar = async () => {
     if (Object.keys(carrito).length === 0) return;
     setSubmitting(true);
+    setSuccess("");
     try {
-      await confirmarCompra();
+      const data = await confirmarCompra();
+      setSuccess(data.message || "¡Pedido creado exitosamente!");
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al confirmar compra:", error);
@@ -131,7 +135,12 @@ const CartButton: React.FC = () => {
         <div className="absolute right-0 top-full z-50 mt-3 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-white/10 bg-[#17191b] shadow-2xl shadow-black/50 sm:w-96">
           <div className="p-4 sm:p-5">
             <h3 className="mb-4 font-semibold text-white">Tu carrito</h3>
-            {Object.keys(carrito).length === 0 ? (
+            {success && (
+              <p role="status" className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-3 text-sm text-emerald-200">
+                {success}
+              </p>
+            )}
+            {Object.keys(carrito).length === 0 && !success ? (
               <p className="rounded-xl bg-white/[0.03] px-4 py-6 text-center text-sm text-slate-400">
                 El carrito está vacío
               </p>

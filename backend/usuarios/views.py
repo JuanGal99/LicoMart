@@ -17,9 +17,9 @@ def login_view(request):
             return JsonResponse({'success': False, 'error': 'Faltan campos'}, status=400)
 
         try:
-            if Usuarios.objects.filter(nombre=identifier).exists():
+            try:
                 usuario = Usuarios.objects.get(nombre=identifier)
-            else:
+            except Usuarios.DoesNotExist:
                 usuario = Usuarios.objects.get(email=identifier)
 
             if usuario.check_password(password):
