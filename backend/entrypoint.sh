@@ -6,11 +6,11 @@ echo "Esperando a que la base de datos esté lista..."
 # Intentar conectar varias veces
 RETRIES=20
 
-until python -c "import MySQLdb, os; MySQLdb.connect(
+until python -c "import pymysql, os; pymysql.connect(
     host=os.environ.get('DB_HOST', 'db'),
     user=os.environ.get('DB_USER', 'licomart_user'),
-    passwd=os.environ.get('DB_PASSWORD', 'licomart_password'),
-    db=os.environ.get('DB_NAME', 'licomart_db')
+    password=os.environ.get('DB_PASSWORD', 'licomart_password'),
+    database=os.environ.get('DB_NAME', 'licomart_db')
 )" >/dev/null 2>&1
 do
   RETRIES=$((RETRIES-1))
@@ -25,5 +25,8 @@ done
 echo "Base de datos lista, corriendo migraciones..."
 python manage.py migrate --noinput
 
-echo "Levantando servidor Django..."
-python manage.py runserver 0.0.0.0:8000
+echo "Recopilando archivos estáticos..."
+python manage.py collectstatic --noinput 2>/dev/null || true
+
+echo "Levantando servidor..."
+gunicorn licomart.wsgi:application --bind 0.0.0.0:8000 --workers 3

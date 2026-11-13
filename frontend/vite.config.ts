@@ -6,7 +6,14 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 5173, // Puerto fijo para el servidor de desarrollo
-    strictPort: true, // Si el puerto está en uso, lanza error (no cambia solo)
+    port: 5173,
+    strictPort: true,
+    proxy: {
+      "/usuarios": "http://localhost:8000",
+      "/productos": "http://localhost:8000",
+      "/carrito": "http://localhost:8000",
+      "/pedidos": "http://localhost:8000",
+      "/media": "http://localhost:8000",
+    },
   },
 });

@@ -34,9 +34,9 @@ def login_view(request):
                     'rol': usuario.rol,
                 })
             else:
-                return JsonResponse({'success': False, 'error': 'Contraseña incorrecta'})
+                return JsonResponse({'success': False, 'error': 'Contraseña incorrecta'}, status=401)
         except Usuarios.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Usuario o correo no encontrado'})
+            return JsonResponse({'success': False, 'error': 'Usuario o correo no encontrado'}, status=401)
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
@@ -78,9 +78,9 @@ def register_view(request):
             return JsonResponse({'success': False, 'error': 'Faltan campos obligatorios'}, status=400)
 
         if Usuarios.objects.filter(nombre=username).exists():
-            return JsonResponse({'success': False, 'error': 'El nombre de usuario ya está en uso.'})
+            return JsonResponse({'success': False, 'error': 'El nombre de usuario ya está en uso.'}, status=409)
         if Usuarios.objects.filter(email=email).exists():
-            return JsonResponse({'success': False, 'error': 'El correo ya está en uso.'})
+            return JsonResponse({'success': False, 'error': 'El correo ya está en uso.'}, status=409)
 
         nuevo_usuario = Usuarios(nombre=username, email=email, rol='usuario')
         nuevo_usuario.set_password(password)

@@ -191,7 +191,7 @@ def admin_productos(request):
             marca=str(payload.get("marca", "")).strip()[:100],
             descripcion=str(payload.get("descripcion", "")).strip()[:200],
             categoria=categoria,
-            precio=float(precio),
+            precio=precio,
             stock=stock,
             imagen=imagen,
         )
@@ -272,7 +272,7 @@ def admin_producto(request, producto_id):
     producto.descripcion = str(payload.get("descripcion", producto.descripcion or "")).strip()[:200]
     producto.imagen = imagen
     producto.categoria = categoria
-    producto.precio = float(precio)
+    producto.precio = precio
     producto.stock = stock
     producto.save()
     return JsonResponse({"producto": _serialize_product(producto)})
