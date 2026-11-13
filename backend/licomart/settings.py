@@ -154,10 +154,14 @@ CORS_ALLOWED_ORIGINS = [
 # Permitir todas las credenciales
 CORS_ALLOW_CREDENTIALS = True
 
-# Permitir todos los headers
-CORS_ALLOW_ALL_HEADERS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "content-type",
+    "x-csrftoken",
+    "x-requested-with",
+    "idempotency-key",
+]
 
-# Permitir todos los métodos HTTP
 CORS_ALLOW_ALL_ORIGINS = False
 
 CSRF_TRUSTED_ORIGINS = [
