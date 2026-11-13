@@ -22,6 +22,7 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
     email: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!visible) return null;
 
@@ -32,6 +33,7 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     try {
       if (isLogin) {
         const data = await loginUser(form.identifier, form.password);
@@ -70,12 +72,14 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
       } else {
         setError("Error de conexión");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-[#1A1D21] p-6 rounded-xl w-full max-w-sm relative shadow-lg">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-[#1A1D21] p-6 rounded-xl w-full max-w-sm relative shadow-lg" onClick={(e) => e.stopPropagation()}>
         <button
           className="absolute top-2 right-2 text-gray-400 hover:text-white"
           onClick={onClose}
@@ -184,9 +188,10 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
-            className="bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700"
+            disabled={loading}
+            className="bg-[#2563EB] text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLogin ? "Iniciar Sesión" : "Registrarse"}
+            {loading ? "Cargando…" : isLogin ? "Iniciar Sesión" : "Registrarse"}
           </button>
         </form>
       </div>

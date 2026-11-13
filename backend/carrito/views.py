@@ -3,6 +3,7 @@ from datetime import date
 
 from django.db import transaction
 from django.http import JsonResponse
+from django.views.decorators.http import require_GET
 from pedidos.models import DetallePedido, MovimientoInventario, Pedidos
 from productos.models import Productos
 from usuarios.models import Usuarios
@@ -12,6 +13,7 @@ def _total(carrito):
     return sum(float(item["precio"]) * int(item["cantidad"]) for item in carrito.values()) if carrito else 0
 
 
+@require_GET
 def ver_carrito(request):
     carrito = request.session.get("carrito", {})
     return JsonResponse({"carrito": carrito, "total": _total(carrito)})

@@ -1,3 +1,5 @@
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Usuarios
@@ -76,6 +78,11 @@ def register_view(request):
 
         if not username or not email or not password:
             return JsonResponse({'success': False, 'error': 'Faltan campos obligatorios'}, status=400)
+
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'error': e.messages[0]}, status=400)
 
         if Usuarios.objects.filter(nombre=username).exists():
             return JsonResponse({'success': False, 'error': 'El nombre de usuario ya está en uso.'}, status=409)
