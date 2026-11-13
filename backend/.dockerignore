@@ -1,0 +1,7 @@
+env/
+env_old/
+__pycache__/
+*.pyc
+.git/
+staticfiles/
+media/

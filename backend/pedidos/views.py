@@ -146,7 +146,7 @@ def kpis(request):
         'data': {
             'activos': activos,
             'pendientes': pendientes,
-            'ingresosMes': ingresos_mes,
+            'ingresosMes': float(ingresos_mes),
         }
     })
 
@@ -271,5 +271,5 @@ def pedidos_completados(request):
                 return JsonResponse({'success': True, 'data': []})
         
         return JsonResponse({'success': True, 'data': data})
-    except Exception:
-        return JsonResponse({'success': False, 'error': 'Error interno del servidor'}, status=500)
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Parámetros de filtro inválidos'}, status=400)
