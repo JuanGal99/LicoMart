@@ -27,13 +27,15 @@ function App() {
     }
   }, []);
 
-  const handleLogout = () => {
-    void logoutUser().catch((error) =>
-      console.error("No se pudo cerrar la sesión en el servidor:", error)
-    );
+  const handleLogout = async () => {
     clearUserFromStorage();
     setUser(null);
     setIsLoggedInState(false);
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error("No se pudo cerrar la sesión en el servidor:", error);
+    }
   };
 
   return (
@@ -63,6 +65,13 @@ function App() {
           isLoggedInState && user?.rol === "admin"
             ? <Admin onLogout={handleLogout} />
             : <Navigate to="/" replace />
+        } />
+        <Route path="*" element={
+          <div className="flex min-h-screen flex-col items-center justify-center bg-[#0b0d0f] text-white">
+            <h1 className="text-6xl font-bold text-amber-500">404</h1>
+            <p className="mt-4 text-lg text-slate-400">Página no encontrada</p>
+            <a href="/" className="mt-6 rounded-xl bg-amber-500 px-5 py-2.5 font-semibold text-[#19140a] transition hover:bg-amber-400">Volver al inicio</a>
+          </div>
         } />
       </Routes>
     </BrowserRouter>

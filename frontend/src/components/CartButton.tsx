@@ -101,9 +101,14 @@ const CartButton: React.FC = () => {
       const data = await confirmarCompra();
       setSuccess(data.message || "¡Pedido creado exitosamente!");
       window.dispatchEvent(new Event("carrito:updated"));
-    } catch (error) {
-      console.error("Error al confirmar compra:", error);
-      setError("No se pudo enviar el carrito. Inténtalo de nuevo.");
+    } catch (err) {
+      console.error("Error al confirmar compra:", err);
+      const axios = await import("axios");
+      if (axios.default.isAxiosError(err) && err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError("No se pudo enviar el carrito. Inténtalo de nuevo.");
+      }
     } finally {
       setSubmitting(false);
     }

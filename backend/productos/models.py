@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -17,7 +18,7 @@ class Productos(models.Model):
     nombre = models.CharField(max_length=100)
     marca = models.CharField(max_length=100, blank=True, default="")
     descripcion = models.CharField(max_length=200, blank=True, null=True)
-    stock = models.IntegerField()
+    stock = models.PositiveIntegerField(default=0)
     precio = models.DecimalField(max_digits=12, decimal_places=2)
     imagen = models.URLField(max_length=500, blank=True, null=True)
     categoria = models.ForeignKey(

@@ -57,8 +57,21 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
           form.password
         );
         if (data.success) {
-          setIsLogin(true);
-          setError("");
+          const loginData = await loginUser(form.username, form.password);
+          if (loginData.success) {
+            const user: User = {
+              id: loginData.usuario_id,
+              nombre: loginData.nombre || form.username,
+              email: loginData.email || form.email,
+              rol: loginData.rol || "usuario",
+            };
+            saveUserToStorage(user);
+            onLoginSuccess();
+            onClose();
+          } else {
+            setIsLogin(true);
+            setError("");
+          }
         } else {
           setError(data.error || "Error al registrar");
         }

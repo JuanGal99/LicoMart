@@ -12,30 +12,51 @@ from usuarios.decorators import admin_required
 def pedidos(request):
     return JsonResponse({'success': True, 'message': 'Vista de pedidos'})
 
+@transaction.atomic
 @admin_required
 def crear_pedido(request):
-    if request.method == "POST":
-        pedido_form = PedidoForm(request.POST)
-        formset = DetallePedidoFormSet(request.POST)
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
-        if pedido_form.is_valid() and formset.is_valid():
-            pedido = pedido_form.save(commit=False)
-            if isinstance(pedido.fecha, str):
-                try:
-                    pedido.fecha = datetime.datetime.strptime(pedido.fecha, '%Y-%m-%d').date()
-                except ValueError:
-                    return JsonResponse({'success': False, 'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'})
+    pedido_form = PedidoForm(request.POST)
+    formset = DetallePedidoFormSet(request.POST)
 
-            pedido.save()
-            detalles = formset.save(commit=False)
-            for detalle in detalles:
-                detalle.id_pedido = pedido
-                detalle.save()
-            return JsonResponse({'success': True, 'message': 'Pedido creado exitosamente'})
+    if not (pedido_form.is_valid() and formset.is_valid()):
+        return JsonResponse({'success': False, 'error': 'Datos inválidos', 'errors': pedido_form.errors}, status=400)
 
-        return JsonResponse({'success': False, 'error': 'Datos inválidos', 'errors': pedido_form.errors})
+    pedido = pedido_form.save(commit=False)
+    if isinstance(pedido.fecha, str):
+        try:
+            pedido.fecha = datetime.datetime.strptime(pedido.fecha, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'}, status=400)
 
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    pedido.save()
+    from productos.models import Productos
+    detalles = formset.save(commit=False)
+    for detalle in detalles:
+        producto = Productos.objects.select_for_update().get(pk=detalle.id_producto_id)
+        if producto.stock < detalle.cantidad:
+            transaction.set_rollback(True)
+            return JsonResponse({
+                'success': False,
+                'error': f'Stock insuficiente para {producto.nombre} ({producto.stock} disponibles)',
+            }, status=400)
+        detalle.id_pedido = pedido
+        detalle.save()
+        anterior = producto.stock
+        producto.stock -= detalle.cantidad
+        producto.save(update_fields=["stock"])
+        MovimientoInventario.objects.create(
+            producto=producto,
+            tipo="salida",
+            cantidad=detalle.cantidad,
+            stock_anterior=anterior,
+            stock_nuevo=producto.stock,
+            motivo=f"Pedido admin form #{pedido.id}",
+            clave_idempotencia=f"pedido-form:{pedido.id}:reserva:{producto.id}",
+        )
+    return JsonResponse({'success': True, 'message': 'Pedido creado exitosamente'})
 
 
 @transaction.atomic
