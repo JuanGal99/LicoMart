@@ -35,7 +35,7 @@ class DetallePedido(models.Model):
     precio_unitario = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def save(self, *args, **kwargs):
-        if self._state.adding:
+        if self._state.adding and not self.precio_unitario:
             self.precio_unitario = self.id_producto.precio
         self.subtotal = self.cantidad * self.precio_unitario
         super().save(*args, **kwargs)

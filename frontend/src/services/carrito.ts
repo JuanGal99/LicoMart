@@ -50,6 +50,11 @@ export const eliminarDelCarrito = async (
   }
 };
 
+export const vaciarCarrito = async () => {
+  const res = await api.post("/carrito/vaciar/");
+  return res.data;
+};
+
 export const confirmarCompra = async () => {
   try {
     const res = await api.post("/carrito/confirmar/");

@@ -42,6 +42,7 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
     Record<number, boolean>
   >({});
   const [reloadCount, setReloadCount] = useState(0);
+  const [cartMessage, setCartMessage] = useState("");
   const hasLoadedCatalog = useRef(false);
 
   useEffect(() => {
@@ -118,17 +119,18 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
 
   const handleAgregarAlCarrito = async (productoId: number) => {
     if (!isLoggedIn) {
-      alert("Debes iniciar sesión para agregar productos al carrito");
+      setCartMessage("Debes iniciar sesión para agregar productos al carrito");
       return;
     }
 
     setAddingToCart(productoId);
+    setCartMessage("");
     try {
       await agregarAlCarrito(productoId, 1);
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (requestError) {
       console.error("Error al agregar al carrito:", requestError);
-      alert("Error al agregar el producto al carrito");
+      setCartMessage("Error al agregar el producto al carrito");
     } finally {
       setAddingToCart(null);
     }
@@ -255,6 +257,11 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
           </aside>
 
           <div className="min-w-0">
+            {cartMessage && (
+              <div role="alert" className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 text-sm text-amber-200">
+                {cartMessage}
+              </div>
+            )}
             {error ? (
           <section
             role="alert"

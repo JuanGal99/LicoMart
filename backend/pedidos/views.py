@@ -274,41 +274,27 @@ def pedidos_completados(request):
         # Obtener los detalles de cada pedido
         detalles = (DetallePedido.objects
                    .filter(id_pedido__in=pedidos)
-                   .select_related('id_producto', 'id_pedido')
+                   .select_related('id_producto', 'id_pedido', 'id_pedido__id_usuario')
                    .order_by('id_pedido__id'))
         
-        # Construir la respuesta
-        data = []
-        for detalle in detalles:
-            pedido = detalle.id_pedido
-            producto = detalle.id_producto
-            
-            item = {
-                'id_pedido': pedido.id,
+        if cliente:
+            detalles = detalles.filter(id_pedido__id_usuario__nombre__icontains=cliente)
+        if producto_filtro:
+            detalles = detalles.filter(id_producto__nombre__icontains=producto_filtro)
+
+        data = [
+            {
+                'id_pedido': detalle.id_pedido_id,
                 'tienda': 'Licomart',
-                'nombre_cliente': pedido.id_usuario.nombre,
-                'nombre_producto': producto.nombre,
+                'nombre_cliente': detalle.id_pedido.id_usuario.nombre,
+                'nombre_producto': detalle.id_producto.nombre,
                 'cantidad': detalle.cantidad,
                 'precio': float(detalle.precio_unitario),
-                'fecha': pedido.fecha.strftime('%Y-%m-%d')
+                'fecha': detalle.id_pedido.fecha.strftime('%Y-%m-%d'),
             }
-            
-            # Aplicar filtros adicionales
-            if tienda and tienda.lower() != item['tienda'].lower():
-                continue
-            if cliente and cliente not in item['nombre_cliente'].lower():
-                continue
-            if producto_filtro and producto_filtro not in item['nombre_producto'].lower():
-                continue
-                
-            data.append(item)
-            
-        # Si no hay filtros aplicados, devolver todos los pedidos completados
-        if not any([fecha_desde, fecha_hasta, tienda, cliente, producto_filtro]) and not data:
-            # Si no hay datos, verificar si hay pedidos completados
-            if not pedidos.exists():
-                return JsonResponse({'success': True, 'data': []})
-        
+            for detalle in detalles
+        ]
+
         return JsonResponse({'success': True, 'data': data})
     except (ValueError, TypeError):
         return JsonResponse({'success': False, 'error': 'Parámetros de filtro inválidos'}, status=400)

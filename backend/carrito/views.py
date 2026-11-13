@@ -144,6 +144,13 @@ def agregar_al_carrito(request, producto_id):
     })
 
 
+def vaciar_carrito(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+    request.session["carrito"] = {}
+    return JsonResponse({"success": True, "message": "Carrito vaciado", "carrito": {}, "total": 0})
+
+
 def eliminar_del_carrito(request, producto_id):
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)

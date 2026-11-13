@@ -125,20 +125,21 @@ def admin_dashboard(request):
             "egresos": float(egresos_por_dia.get(dia, 0)),
         })
 
-    pedidos = Pedidos.objects.select_related("id_usuario").order_by("-fecha", "-id")
+    pedidos = Pedidos.objects.select_related("id_usuario").prefetch_related(
+        "detalles__id_producto"
+    ).order_by("-fecha", "-id")
     movimientos = MovimientoInventario.objects.select_related(
         "producto", "responsable"
     ).all()
+    total_ingresos = float(ingresos.aggregate(total=Sum("importe"))["total"] or 0)
+    total_egresos = float(egresos.aggregate(total=Sum("importe"))["total"] or 0)
     return JsonResponse({
         "kpis": {
             "productos": productos.count(),
             "unidades_inventario": productos.aggregate(total=Sum("stock"))["total"] or 0,
-            "ingresos": float(ingresos.aggregate(total=Sum("importe"))["total"] or 0),
-            "egresos": float(egresos.aggregate(total=Sum("importe"))["total"] or 0),
-            "balance": float(
-                (ingresos.aggregate(total=Sum("importe"))["total"] or 0)
-                - (egresos.aggregate(total=Sum("importe"))["total"] or 0)
-            ),
+            "ingresos": total_ingresos,
+            "egresos": total_egresos,
+            "balance": total_ingresos - total_egresos,
             "pedidos_pendientes": Pedidos.objects.filter(estado="Pendiente").count(),
             "pedidos_completados": Pedidos.objects.filter(estado="Completado").count(),
             "pedidos_cancelados": Pedidos.objects.filter(estado="Cancelado").count(),

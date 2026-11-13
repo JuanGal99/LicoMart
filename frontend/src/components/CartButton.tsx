@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiMinus, FiPlus, FiShoppingCart, FiTrash2 } from "react-icons/fi";
 import {
   agregarAlCarrito,
   getCarrito,
   type Carrito,
   eliminarDelCarrito,
+  vaciarCarrito,
   confirmarCompra,
 } from "../services/carrito";
 
 const CartButton: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [carrito, setCarrito] = useState<Carrito>({});
   const [total, setTotal] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +31,17 @@ const CartButton: React.FC = () => {
       window.removeEventListener("carrito:updated", onUpdated);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
 
   const loadCarrito = async () => {
     try {
@@ -81,13 +94,11 @@ const CartButton: React.FC = () => {
     setClearing(true);
     setError("");
     try {
-      for (const [productoId, item] of Object.entries(carrito)) {
-        await eliminarDelCarrito(Number(productoId), item.cantidad);
-      }
+      await vaciarCarrito();
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (error) {
       console.error("Error al vaciar el carrito:", error);
-      setError("No se pudo vaciar todo el carrito. Inténtalo de nuevo.");
+      setError("No se pudo vaciar el carrito. Inténtalo de nuevo.");
     } finally {
       setClearing(false);
     }
@@ -120,7 +131,7 @@ const CartButton: React.FC = () => {
   );
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         type="button"
         onClick={toggleCarrito}
