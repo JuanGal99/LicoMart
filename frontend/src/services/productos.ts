@@ -1,5 +1,5 @@
 import api from "./api";
-import type { FiltrosCatalogo, RespuestaCatalogo } from "./index";
+import type { FiltrosCatalogo, Producto, RespuestaCatalogo } from "./index";
 
 export const getProductos = async (
   filtros: FiltrosCatalogo = {}
@@ -14,4 +14,13 @@ export const getProductos = async (
     console.error("Error al cargar productos:", error);
     throw error;
   }
+};
+
+export const getProducto = async (
+  id: number
+): Promise<{ producto: Producto; relacionados: Producto[] }> => {
+  const res = await api.get<{ producto: Producto; relacionados: Producto[] }>(
+    `/productos/${id}/`
+  );
+  return res.data;
 };

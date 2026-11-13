@@ -386,7 +386,7 @@ export default function Admin({ onLogout }: { onLogout: () => void }) {
           </button>
         </header>
 
-        <nav aria-label="Secciones administrativas" className="mb-6 flex gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-[#121416] p-2">
+        <nav aria-label="Secciones administrativas" className="mb-6 flex gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-[#121416] p-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
           {sections.map(({ id, label, icon: Icon }) => (
             <button
               key={id}

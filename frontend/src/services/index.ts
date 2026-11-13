@@ -21,12 +21,15 @@ export interface FiltrosCatalogo {
   precio_max?: string;
   q?: string;
   orden?: "" | "precio_asc" | "precio_desc" | "nombre_asc";
+  page?: number;
 }
 
 export interface RespuestaCatalogo {
   productos: Producto[];
   categorias: CategoriaProducto[];
   total: number;
+  page: number;
+  pages: number;
 }
 
 export * from "./auth";

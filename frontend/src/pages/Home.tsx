@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import {
   agregarAlCarrito,
   getCarrito,
@@ -12,6 +13,7 @@ import type {
   RespuestaCatalogo,
 } from "../services";
 import type { User } from "../services/auth";
+import { Link } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 
 type Props = {
@@ -24,10 +26,29 @@ type Props = {
 const formatPrice = (price: number) =>
   `$${price.toLocaleString("es-CO")}`;
 
+function SkeletonCard() {
+  return (
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#17191b]">
+      <div className="aspect-[4/3] animate-pulse bg-slate-800" />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="h-3 w-16 animate-pulse rounded bg-slate-700" />
+        <div className="h-4 w-3/4 animate-pulse rounded bg-slate-700" />
+        <div className="h-3 w-full animate-pulse rounded bg-slate-700/60" />
+        <div className="mt-auto flex items-end justify-between pt-4">
+          <div className="h-6 w-20 animate-pulse rounded bg-slate-700" />
+          <div className="h-10 w-20 animate-pulse rounded-lg bg-slate-700" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Home({ isLoggedIn, user, search, setSearch }: Props) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<CategoriaProducto[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [categoria, setCategoria] = useState("");
@@ -42,7 +63,6 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
     Record<number, boolean>
   >({});
   const [reloadCount, setReloadCount] = useState(0);
-  const [cartMessage, setCartMessage] = useState("");
   const hasLoadedCatalog = useRef(false);
 
   useEffect(() => {
@@ -57,11 +77,13 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
           precio_max: precioMax,
           q: search.trim(),
           orden,
+          page,
         });
         if (active) {
           setProductos(data.productos);
           setCategorias(data.categorias);
           setTotal(data.total);
+          setPages(data.pages);
           hasLoadedCatalog.current = true;
         }
       } catch (requestError) {
@@ -83,7 +105,11 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [categoria, precioMin, precioMax, search, orden, reloadCount]);
+  }, [categoria, precioMin, precioMax, search, orden, page, reloadCount]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [categoria, precioMin, precioMax, search, orden]);
 
   useEffect(() => {
     const cargarCarrito = async () => {
@@ -115,22 +141,27 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
     setPrecioMax("");
     setOrden("");
     setSearch("");
+    setPage(1);
   };
 
   const handleAgregarAlCarrito = async (productoId: number) => {
     if (!isLoggedIn) {
-      setCartMessage("Debes iniciar sesión para agregar productos al carrito");
+      toast.error("Debes iniciar sesión para agregar productos al carrito");
       return;
     }
 
     setAddingToCart(productoId);
-    setCartMessage("");
     try {
       await agregarAlCarrito(productoId, 1);
       window.dispatchEvent(new Event("carrito:updated"));
+      toast.success("Producto agregado al carrito");
     } catch (requestError) {
       console.error("Error al agregar al carrito:", requestError);
-      setCartMessage("Error al agregar el producto al carrito");
+      if (axios.isAxiosError(requestError) && requestError.response?.data?.error) {
+        toast.error(requestError.response.data.error);
+      } else {
+        toast.error("Error al agregar el producto al carrito");
+      }
     } finally {
       setAddingToCart(null);
     }
@@ -257,11 +288,6 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
           </aside>
 
           <div className="min-w-0">
-            {cartMessage && (
-              <div role="alert" className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/20 p-3 text-sm text-amber-200">
-                {cartMessage}
-              </div>
-            )}
             {error ? (
           <section
             role="alert"
@@ -278,9 +304,14 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
             </button>
           </section>
             ) : loading && productos.length === 0 ? (
-          <p className="py-16 text-center text-sm text-slate-400" role="status">
-            Cargando productos…
-          </p>
+              <section
+                aria-label="Cargando productos"
+                className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3"
+              >
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </section>
             ) : productos.length === 0 ? (
           <section className="rounded-2xl border border-white/10 bg-[#15181d] px-6 py-14 text-center">
             <h2 className="text-lg font-semibold">No hay productos con esos filtros</h2>
@@ -296,6 +327,7 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
             </button>
           </section>
             ) : (
+              <>
               <section
                 aria-label="Productos"
                 className={`grid grid-cols-1 gap-5 transition-opacity sm:grid-cols-2 xl:grid-cols-3 ${
@@ -315,7 +347,7 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
                   key={producto.id}
                   className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#17191b] shadow-lg shadow-black/10 transition duration-200 hover:-translate-y-1 hover:border-amber-500/40 hover:shadow-xl hover:shadow-black/30"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-slate-800">
+                  <Link to={`/producto/${producto.id}`} className="relative aspect-[4/3] overflow-hidden bg-slate-800 block">
                     {imagenDisponible ? (
                       <img
                         src={producto.imagen ?? undefined}
@@ -344,7 +376,7 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
                     <span className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/70 px-3 py-1 text-xs font-medium text-white backdrop-blur">
                       {producto.categoria.nombre}
                     </span>
-                  </div>
+                  </Link>
 
                   <div className="flex flex-1 flex-col p-4">
                     {producto.marca && (
@@ -352,9 +384,9 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
                         {producto.marca}
                       </p>
                     )}
-                    <h2 className="mt-1 text-base font-semibold leading-snug text-white">
+                    <Link to={`/producto/${producto.id}`} className="mt-1 block text-base font-semibold leading-snug text-white hover:text-amber-300 transition">
                       {producto.nombre}
-                    </h2>
+                    </Link>
                     <p className="mt-2 line-clamp-2 min-h-10 text-sm text-slate-400">
                       {producto.descripcion || "Descubre este producto en LicoMart."}
                     </p>
@@ -392,6 +424,53 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
               );
             })}
               </section>
+
+              {pages > 1 && (
+                <nav aria-label="Paginación del catálogo" className="mt-8 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-300 transition hover:border-amber-500/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Anterior
+                  </button>
+                  {Array.from({ length: pages }, (_, i) => i + 1)
+                    .filter((p) => p === 1 || p === pages || Math.abs(p - page) <= 1)
+                    .reduce<(number | "ellipsis")[]>((acc, p, idx, arr) => {
+                      if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("ellipsis");
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((item, idx) =>
+                      item === "ellipsis" ? (
+                        <span key={`e${idx}`} className="px-1 text-slate-500">…</span>
+                      ) : (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setPage(item)}
+                          className={`min-w-9 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                            item === page
+                              ? "bg-amber-500 text-[#19140a]"
+                              : "border border-white/10 text-slate-300 hover:border-amber-500/50 hover:text-white"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      )
+                    )}
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                    disabled={page >= pages}
+                    className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-300 transition hover:border-amber-500/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Siguiente
+                  </button>
+                </nav>
+              )}
+              </>
             )}
           </div>
         </div>

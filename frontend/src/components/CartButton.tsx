@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import { FiMinus, FiPlus, FiShoppingCart, FiTrash2 } from "react-icons/fi";
 import {
   agregarAlCarrito,
@@ -110,6 +111,7 @@ const CartButton: React.FC = () => {
     setSuccess("");
     try {
       const data = await confirmarCompra();
+      toast.success(data.message || "¡Pedido creado exitosamente!");
       setSuccess(data.message || "¡Pedido creado exitosamente!");
       window.dispatchEvent(new Event("carrito:updated"));
     } catch (err) {

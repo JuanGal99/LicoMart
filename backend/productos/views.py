@@ -9,6 +9,41 @@ from .forms import ProductoForm
 from .models import Categoria, Productos
 
 
+def detalle_producto(request, producto_id):
+    try:
+        producto = Productos.objects.select_related("categoria").get(pk=producto_id)
+    except Productos.DoesNotExist:
+        return JsonResponse({"error": "Producto no encontrado."}, status=404)
+
+    relacionados = list(
+        Productos.objects.filter(categoria=producto.categoria)
+        .exclude(pk=producto.pk)
+        .select_related("categoria")
+        .order_by("?")[:4]
+    )
+
+    def serialize(p: Productos) -> dict:
+        return {
+            "id": p.id,
+            "nombre": p.nombre,
+            "marca": p.marca,
+            "descripcion": p.descripcion,
+            "stock": p.stock,
+            "precio": float(p.precio),
+            "imagen": p.imagen,
+            "categoria": {
+                "id": p.categoria_id,
+                "nombre": p.categoria.nombre,
+                "slug": p.categoria.slug,
+            },
+        }
+
+    return JsonResponse({
+        "producto": serialize(producto),
+        "relacionados": [serialize(r) for r in relacionados],
+    })
+
+
 @admin_required
 @require_POST
 def crear_producto(request):
@@ -81,6 +116,15 @@ def lista_productos(request):
         productos = productos.order_by("id")
 
     total = productos.count()
+
+    page_size = 12
+    try:
+        page = max(1, int(request.GET.get("page", 1)))
+    except (TypeError, ValueError):
+        page = 1
+    start = (page - 1) * page_size
+    paginated = productos[start:start + page_size]
+
     datos_productos = [
         {
             "id": producto.id,
@@ -96,9 +140,13 @@ def lista_productos(request):
                 "slug": producto.categoria.slug,
             },
         }
-        for producto in productos
+        for producto in paginated
     ]
     categorias = list(Categoria.objects.values("id", "nombre", "slug"))
-    return JsonResponse(
-        {"productos": datos_productos, "categorias": categorias, "total": total}
-    )
+    return JsonResponse({
+        "productos": datos_productos,
+        "categorias": categorias,
+        "total": total,
+        "page": page,
+        "pages": math.ceil(total / page_size) if total else 1,
+    })

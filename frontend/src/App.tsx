@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Home from "./pages/Home";
+import ProductDetail from "./pages/ProductDetail";
 import Navbar from "./components/Navbar";
 import Admin from "./pages/Admin";
 import {
@@ -40,6 +42,19 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "#1a1d21",
+            color: "#f1f5f9",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "0.75rem",
+          },
+          success: { iconTheme: { primary: "#f59e0b", secondary: "#1a1d21" } },
+          error: { iconTheme: { primary: "#f87171", secondary: "#1a1d21" } },
+        }}
+      />
       <Navbar
         isLoggedIn={isLoggedInState}
         setIsLoggedIn={setIsLoggedInState}
@@ -61,6 +76,9 @@ function App() {
             />
           }
         />
+        <Route path="/producto/:id" element={
+          <ProductDetail isLoggedIn={isLoggedInState} user={user} />
+        } />
         <Route path="/admin" element={
           isLoggedInState && user?.rol === "admin"
             ? <Admin onLogout={handleLogout} />
