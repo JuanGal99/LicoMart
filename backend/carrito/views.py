@@ -3,10 +3,17 @@ from datetime import date
 
 from django.db import transaction
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from pedidos.models import DetallePedido, MovimientoInventario, Pedidos
 from productos.models import Productos
 from usuarios.models import Usuarios
+
+
+def _require_session_user(request):
+    uid = request.session.get("usuario_id")
+    if not uid:
+        return None, JsonResponse({"success": False, "error": "Usuario no autenticado"}, status=401)
+    return uid, None
 
 
 def _total(carrito):
@@ -19,17 +26,16 @@ def ver_carrito(request):
     return JsonResponse({"carrito": carrito, "total": _total(carrito)})
 
 
+@require_POST
 @transaction.atomic
 def confirmar_compra(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+    usuario_id, err = _require_session_user(request)
+    if err:
+        return err
 
     carrito = request.session.get("carrito", {})
-    usuario_id = request.session.get("usuario_id")
     if not carrito:
         return JsonResponse({"success": False, "error": "El carrito está vacío"}, status=400)
-    if not usuario_id:
-        return JsonResponse({"success": False, "error": "Usuario no autenticado"}, status=401)
 
     try:
         usuario = Usuarios.objects.get(pk=usuario_id)
@@ -104,9 +110,11 @@ def confirmar_compra(request):
     })
 
 
+@require_POST
 def agregar_al_carrito(request, producto_id):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+    usuario_id, err = _require_session_user(request)
+    if err:
+        return err
     try:
         payload = json.loads(request.body or "{}")
         cantidad = int(payload.get("cantidad", 1))
@@ -144,16 +152,20 @@ def agregar_al_carrito(request, producto_id):
     })
 
 
+@require_POST
 def vaciar_carrito(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+    usuario_id, err = _require_session_user(request)
+    if err:
+        return err
     request.session["carrito"] = {}
     return JsonResponse({"success": True, "message": "Carrito vaciado", "carrito": {}, "total": 0})
 
 
+@require_POST
 def eliminar_del_carrito(request, producto_id):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+    usuario_id, err = _require_session_user(request)
+    if err:
+        return err
     try:
         payload = json.loads(request.body or "{}")
         cantidad = int(payload.get("cantidad", 1))

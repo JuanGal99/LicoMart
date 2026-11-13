@@ -154,7 +154,7 @@ def admin_dashboard(request):
             _serialize_finance(movimiento)
             for movimiento in MovimientoFinanciero.objects.select_related(
                 "responsable", "pedido"
-            )[:8]
+            ).order_by("-fecha", "-id")[:8]
         ],
         "movimientos_recientes": [
             _serialize_inventory(movimiento) for movimiento in movimientos[:8]

@@ -62,3 +62,21 @@ export function clearUserFromStorage() {
   localStorage.removeItem("user");
   localStorage.removeItem("isLoggedIn");
 }
+
+export async function verifySession(): Promise<User | null> {
+  try {
+    const res = await api.get("/usuarios/me/");
+    if (res.data.authenticated) {
+      const user: User = {
+        id: res.data.usuario_id,
+        nombre: res.data.nombre,
+        email: res.data.email,
+        rol: res.data.rol,
+      };
+      saveUserToStorage(user);
+      return user;
+    }
+  } catch { /* session expired */ }
+  clearUserFromStorage();
+  return null;
+}

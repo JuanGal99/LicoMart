@@ -11,6 +11,7 @@ import {
   getUserFromStorage,
   clearUserFromStorage,
   logoutUser,
+  verifySession,
   type User,
 } from "./services/auth";
 
@@ -20,13 +21,21 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Verificar si hay un usuario logueado al cargar la app
     if (isLoggedIn()) {
       const savedUser = getUserFromStorage();
       if (savedUser) {
         setUser(savedUser);
         setIsLoggedInState(true);
       }
+      verifySession().then((verified) => {
+        if (verified) {
+          setUser(verified);
+          setIsLoggedInState(true);
+        } else {
+          setUser(null);
+          setIsLoggedInState(false);
+        }
+      });
     }
   }, []);
 
