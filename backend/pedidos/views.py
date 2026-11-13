@@ -84,17 +84,21 @@ def crear_pedido_json(request):
 
     pedido = Pedidos.objects.create(id_usuario=usuario, fecha=fecha, estado=estado)
 
+    skipped = []
     created_count = 0
     for d in detalles:
         pid = d.get('producto_id')
         cantidad = d.get('cantidad')
         if not pid or not cantidad or cantidad <= 0:
+            skipped.append(f"producto_id={pid}: cantidad inválida")
             continue
         try:
             prod = Productos.objects.select_for_update().get(id=pid)
         except Productos.DoesNotExist:
+            skipped.append(f"producto_id={pid}: no existe")
             continue
         if prod.stock < cantidad:
+            skipped.append(f"producto_id={pid}: stock insuficiente ({prod.stock} disponibles, {cantidad} solicitados)")
             continue
         anterior = prod.stock
         prod.stock -= cantidad
@@ -111,7 +115,21 @@ def crear_pedido_json(request):
         )
         created_count += 1
 
-    return JsonResponse({'success': True, 'message': 'Pedido creado', 'pedido_id': pedido.id, 'detalles_creados': created_count})
+    if created_count == 0:
+        transaction.set_rollback(True)
+        return JsonResponse({
+            'success': False,
+            'error': 'Ningún detalle pudo procesarse',
+            'detalles_omitidos': skipped,
+        }, status=400)
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Pedido creado',
+        'pedido_id': pedido.id,
+        'detalles_creados': created_count,
+        'detalles_omitidos': skipped,
+    })
 
 
 def actualizar_estado_pedido(request, pedido_id: int):
@@ -246,11 +264,11 @@ def pedidos_completados(request):
             
             item = {
                 'id_pedido': pedido.id,
-                'tienda': 'Licomart',  # Por defecto es Licomart, se puede modificar si se integra con otra tienda
+                'tienda': 'Licomart',
                 'nombre_cliente': pedido.id_usuario.nombre,
                 'nombre_producto': producto.nombre,
                 'cantidad': detalle.cantidad,
-                'precio': float(producto.precio),
+                'precio': float(detalle.precio_unitario),
                 'fecha': pedido.fecha.strftime('%Y-%m-%d')
             }
             
