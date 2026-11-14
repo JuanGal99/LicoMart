@@ -3,7 +3,6 @@ set -eu
 
 echo "Esperando a que la base de datos esté lista..."
 
-# Intentar conectar varias veces
 RETRIES=20
 
 until python -c "import pymysql, os; pymysql.connect(
@@ -27,6 +26,12 @@ python manage.py migrate --noinput
 
 echo "Recopilando archivos estáticos..."
 python manage.py collectstatic --noinput 2>/dev/null || true
+
+if [ "${SEED_ON_START:-false}" = "true" ]; then
+  echo ""
+  echo "Cargando datos de demostración..."
+  python manage.py seed_completo
+fi
 
 echo "Levantando servidor..."
 gunicorn licomart.wsgi:application --bind 0.0.0.0:8000 --workers 3
