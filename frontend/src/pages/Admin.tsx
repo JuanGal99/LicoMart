@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { isAxiosError } from "axios";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -93,7 +93,7 @@ const money = (value: number) =>
   `$${value.toLocaleString("es-CO", { maximumFractionDigits: 0 })}`;
 
 const errorMessage = (error: unknown) =>
-  axios.isAxiosError<{ error?: string }>(error)
+  isAxiosError<{ error?: string }>(error)
     ? error.response?.data?.error || error.message
     : error instanceof Error
       ? error.message
@@ -171,7 +171,7 @@ export default function Admin({ onLogout }: { onLogout: () => void }) {
   });
 
   const handleUnauthorized = useCallback((requestError: unknown) => {
-    if (axios.isAxiosError(requestError) && requestError.response?.status === 401) {
+    if (isAxiosError(requestError) && requestError.response?.status === 401) {
       clearUserFromStorage();
       navigate("/", { replace: true });
       return true;
@@ -332,7 +332,7 @@ export default function Admin({ onLogout }: { onLogout: () => void }) {
       () => createAdminMovimientoFinanciero({ ...financeForm, tipo }),
       tipo === "ingreso" ? "Ingreso registrado." : "Egreso registrado."
     );
-    setFinanceForm({ ...financeForm, concepto: "", importe: 0, observaciones: "" });
+    setFinanceForm({ concepto: "", importe: 0, fecha: new Date().toISOString().slice(0, 10), observaciones: "" });
   };
 
   const changeOrderState = async (pedido: AdminPedido, estado: EstadoPedido) => {

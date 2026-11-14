@@ -14,6 +14,7 @@ import {
   verifySession,
   type User,
 } from "./services/auth";
+import api from "./services/api";
 
 function App() {
   const [isLoggedInState, setIsLoggedInState] = useState(false);
@@ -21,6 +22,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    api.get("/usuarios/csrf/").catch(() => {});
     if (isLoggedIn()) {
       const savedUser = getUserFromStorage();
       if (savedUser) {

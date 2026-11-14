@@ -106,7 +106,10 @@ export const createAdminProducto = async (payload: ProductoPayload) =>
 export const updateAdminProducto = async (
   id: number,
   payload: ProductoPayload
-) => api.patch(`/pedidos/admin/productos/${id}/`, payload);
+) => {
+  const { stock: _, ...data } = payload;
+  return api.patch(`/pedidos/admin/productos/${id}/`, data);
+};
 
 export const deleteAdminProducto = async (id: number) =>
   api.delete(`/pedidos/admin/productos/${id}/`);

@@ -139,11 +139,6 @@ def crear_pedido_json(request):
     })
 
 
-def actualizar_estado_pedido(request, pedido_id: int):
-    from .admin_views import admin_actualizar_pedido
-
-    return admin_actualizar_pedido(request, pedido_id)
-
 
 @require_GET
 @admin_required
