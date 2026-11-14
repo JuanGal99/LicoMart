@@ -3,7 +3,6 @@ from . import views
 from . import admin_views
 
 urlpatterns = [
-    path('', views.pedidos, name='pedido'),
     path('crear/', views.crear_pedido, name='crear_pedido'),
     path('crear-json/', views.crear_pedido_json, name='crear_pedido_json'),
     path('<int:pedido_id>/estado/', views.actualizar_estado_pedido, name='actualizar_estado_pedido'),

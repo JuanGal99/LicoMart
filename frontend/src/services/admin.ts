@@ -78,7 +78,10 @@ export interface ProductoPayload {
   imagen: string;
 }
 
-const requestKey = () => crypto.randomUUID();
+const requestKey = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export const prepareAdminSession = async () => {
   await api.get("/usuarios/csrf/");

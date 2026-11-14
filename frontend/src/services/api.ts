@@ -17,8 +17,8 @@ api.interceptors.response.use(undefined, async (error) => {
     (typeof data === "string"
       ? data.includes("CSRF")
       : data?.detail?.includes?.("CSRF"));
-  if (isCsrf && !error.config._retry) {
-    error.config._retry = true;
+  if (isCsrf && !(error.config as Record<string, unknown>)._retry) {
+    (error.config as Record<string, unknown>)._retry = true;
     await api.get("/usuarios/csrf/");
     return api(error.config);
   }

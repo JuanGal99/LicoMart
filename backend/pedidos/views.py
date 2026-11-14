@@ -4,20 +4,16 @@ import json
 from django.db import transaction
 from django.db.models import Sum
 from django.http import JsonResponse
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import PedidoForm, DetallePedidoFormSet
 from .models import DetallePedido, MovimientoInventario, Pedidos
 from usuarios.decorators import admin_required
 
-def pedidos(request):
-    return JsonResponse({'success': True, 'message': 'Vista de pedidos'})
-
+@require_POST
 @transaction.atomic
 @admin_required
 def crear_pedido(request):
-    if request.method != "POST":
-        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
-
     pedido_form = PedidoForm(request.POST)
     formset = DetallePedidoFormSet(request.POST)
 
@@ -59,20 +55,10 @@ def crear_pedido(request):
     return JsonResponse({'success': True, 'message': 'Pedido creado exitosamente'})
 
 
+@require_POST
 @transaction.atomic
 @admin_required
 def crear_pedido_json(request):
-    """Crea un pedido y sus detalles desde JSON.
-    Body esperado:
-    {
-      "usuario_id": 6,
-      "fecha": "2025-10-31",  # opcional, por defecto hoy
-      "estado": "Pendiente",  # opcional
-      "detalles": [ {"producto_id": 1, "cantidad": 2}, ... ]
-    }
-    """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
     try:
         payload = json.loads(request.body or '{}')
     except json.JSONDecodeError:
@@ -159,6 +145,7 @@ def actualizar_estado_pedido(request, pedido_id: int):
     return admin_actualizar_pedido(request, pedido_id)
 
 
+@require_GET
 @admin_required
 def kpis(request):
     """Devuelve KPIs básicos: pedidos activos, pendientes e ingresos del mes."""
@@ -190,6 +177,7 @@ def kpis(request):
     })
 
 
+@require_GET
 @admin_required
 def top_vendidos(request):
     """Top productos por unidades vendidas (sumatoria de cantidad en detalles)."""
@@ -213,6 +201,7 @@ def top_vendidos(request):
     return JsonResponse({'success': True, 'data': data})
 
 
+@require_GET
 @admin_required
 def pedidos_recientes(request):
     """Lista de pedidos recientes con cliente, estado y fecha."""
@@ -239,6 +228,7 @@ def pedidos_recientes(request):
 
 
 
+@require_GET
 @admin_required
 def pedidos_completados(request):
     # Lista de pedidos completados con todos los detalles necesarios para la tabla

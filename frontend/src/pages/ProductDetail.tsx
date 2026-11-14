@@ -77,7 +77,7 @@ export default function ProductDetail({ isLoggedIn, user }: Props) {
     if (isLoggedIn) {
       void load();
     }
-    const handler = () => void load();
+    const handler = () => { if (isLoggedIn) void load(); };
     window.addEventListener("carrito:updated", handler);
     return () => window.removeEventListener("carrito:updated", handler);
   }, [id, isLoggedIn]);

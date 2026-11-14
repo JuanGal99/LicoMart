@@ -11,7 +11,6 @@ from django.db.models import Q
 
 from .models import Usuarios
 
-@ensure_csrf_cookie
 @require_POST
 def login_view(request):
     try:

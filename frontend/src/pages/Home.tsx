@@ -1,4 +1,4 @@
-import axios from "axios";
+import { isAxiosError } from "axios";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
@@ -89,7 +89,7 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
       } catch (requestError) {
         if (active) {
           setError(
-            axios.isAxiosError<{ error?: string }>(requestError)
+            isAxiosError<{ error?: string }>(requestError)
               ? requestError.response?.data?.error || requestError.message
               : requestError instanceof Error
                 ? requestError.message
@@ -127,7 +127,7 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
     };
 
     const onUpdated = () => {
-      void cargarCarrito();
+      if (isLoggedIn) void cargarCarrito();
     };
 
     if (isLoggedIn) {
@@ -159,7 +159,7 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
       toast.success("Producto agregado al carrito");
     } catch (requestError) {
       console.error("Error al agregar al carrito:", requestError);
-      if (axios.isAxiosError(requestError) && requestError.response?.data?.error) {
+      if (isAxiosError(requestError) && requestError.response?.data?.error) {
         toast.error(requestError.response.data.error);
       } else {
         toast.error("Error al agregar el producto al carrito");
