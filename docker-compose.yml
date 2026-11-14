@@ -31,7 +31,7 @@ services:
       DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       ALLOW_DEMO_ADMIN: ${ALLOW_DEMO_ADMIN:-true}
-      SEED_ON_START: ${SEED_ON_START:-false}
+      SEED_ON_START: ${SEED_ON_START:-true}
       DB_NAME: licomart_db
       DB_USER: licomart_user
       DB_PASSWORD: licomart_password

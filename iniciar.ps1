@@ -1,17 +1,17 @@
 # ============================================================
 #  LicoMart - Arranque completo con un solo comando
-#  Uso:  .\iniciar.ps1          (datos existentes)
-#        .\iniciar.ps1 -Seed    (borra y recarga datos demo)
+#  Uso:  .\iniciar.ps1              (carga datos demo por defecto)
+#        .\iniciar.ps1 -NoSeed      (conserva datos existentes)
 # ============================================================
-param([switch]$Seed)
+param([switch]$NoSeed)
 
 $ErrorActionPreference = "Stop"
 
-$seedFlag = "false"
-if ($Seed) {
-    $seedFlag = "true"
+$seedFlag = "true"
+if ($NoSeed) {
+    $seedFlag = "false"
     Write-Host ""
-    Write-Host "  Se borraran TODOS los datos y se cargaran datos de demostracion." -ForegroundColor Yellow
+    Write-Host "  Se conservaran los datos existentes (sin recarga demo)." -ForegroundColor Yellow
     Write-Host ""
 }
 
@@ -47,17 +47,11 @@ Write-Host "========================================================" -Foregroun
 Write-Host ""
 Write-Host "  URL:  http://localhost:5173" -ForegroundColor White
 Write-Host ""
-
-if ($Seed) {
-    Write-Host "  CREDENCIALES:" -ForegroundColor Yellow
-    Write-Host "  ----------------------------------------"
-    Write-Host "  Rol: admin       Usuario: admin       Clave: Admin2026!"
-    Write-Host "  Rol: usuario     Usuario: usuario     Clave: Usuario2026!"
-    Write-Host "  ----------------------------------------"
-} else {
-    Write-Host "  Para cargar datos demo: .\iniciar.ps1 -Seed" -ForegroundColor DarkGray
-}
-
+Write-Host "  CREDENCIALES:" -ForegroundColor Yellow
+Write-Host "  ----------------------------------------"
+Write-Host "  Rol: admin       Usuario: admin       Clave: Admin2026!"
+Write-Host "  Rol: usuario     Usuario: usuario     Clave: Usuario2026!"
+Write-Host "  ----------------------------------------"
 Write-Host ""
 Write-Host "  Logs:   docker compose logs -f"
 Write-Host "  Parar:  docker compose down"
