@@ -27,13 +27,13 @@ No es necesario instalar Python, Node.js ni MySQL en el equipo.
 
 Clona el repositorio y ejecuta el comando de inicio desde la carpeta del proyecto. **Al terminar de levantar los servicios, la consola mostrará la URL de acceso y las credenciales de administrador y usuario para probar la aplicación.**
 
-### Windows (PowerShell)
+### Windows
 
-```powershell
-.\iniciar.ps1
+```
+iniciar.bat
 ```
 
-### Linux / macOS (Bash)
+### Linux / macOS
 
 ```bash
 ./iniciar.sh
@@ -47,8 +47,8 @@ El comando construye los contenedores, carga datos de demostración (categorías
 
 Si ya tienes datos y no quieres que se borren y recarguen, usa la bandera `--no-seed`:
 
-```powershell
-.\iniciar.ps1 -NoSeed
+```
+iniciar.bat --no-seed
 ```
 
 ```bash
@@ -88,8 +88,8 @@ frontend/
   src/components/ Componentes reutilizables de la interfaz
   src/services/   Comunicación HTTP con el backend
 docker-compose.yml
-iniciar.sh        Script de inicio (Bash)
-iniciar.ps1       Script de inicio (PowerShell)
+iniciar.bat       Script de inicio (Windows)
+iniciar.sh        Script de inicio (Linux/macOS)
 ```
 
 ## Funcionalidades
