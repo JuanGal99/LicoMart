@@ -104,14 +104,13 @@ iniciar.sh        Script de inicio (Linux/macOS)
 
 Los pagos se confirman manualmente desde el panel: el proyecto no integra una pasarela de pago.
 
-## Detener y volver a iniciar
+## Detener
 
-```powershell
-docker compose down        # Detiene sin borrar datos
-docker compose up -d       # Vuelve a iniciar
+```
+docker compose down
 ```
 
-No uses `docker compose down -v` si quieres conservar los datos: `-v` elimina el volumen de MySQL.
+Para volver a iniciar, ejecuta `iniciar.bat` (o `./iniciar.sh`) de nuevo. No uses `docker compose down -v` si quieres conservar los datos: `-v` elimina el volumen de MySQL.
 
 ## Diagramas
 
