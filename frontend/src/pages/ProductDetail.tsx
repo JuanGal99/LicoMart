@@ -74,11 +74,13 @@ export default function ProductDetail({ isLoggedIn, user }: Props) {
         setCartQty(carrito[String(id)]?.cantidad || 0);
       } catch { /* ignore */ }
     };
-    void load();
+    if (isLoggedIn) {
+      void load();
+    }
     const handler = () => void load();
     window.addEventListener("carrito:updated", handler);
     return () => window.removeEventListener("carrito:updated", handler);
-  }, [id]);
+  }, [id, isLoggedIn]);
 
   const handleAgregar = async () => {
     if (!isLoggedIn) {

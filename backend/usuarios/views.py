@@ -5,48 +5,45 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_POST
 
 from django.db.models import Q
 
 from .models import Usuarios
 
 @ensure_csrf_cookie
-@require_http_methods(["GET", "POST"])
+@require_POST
 def login_view(request):
-    if request.method == "GET":
-        return JsonResponse({"success": True})
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            identifier = data.get('identifier')
-            password = data.get('password')
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'JSON inválido'}, status=400)
+    try:
+        data = json.loads(request.body)
+        identifier = data.get('identifier')
+        password = data.get('password')
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'JSON inválido'}, status=400)
 
-        if not identifier or not password:
-            return JsonResponse({'success': False, 'error': 'Faltan campos'}, status=400)
+    if not identifier or not password:
+        return JsonResponse({'success': False, 'error': 'Faltan campos'}, status=400)
 
-        try:
-            usuario = Usuarios.objects.get(
-                Q(nombre=identifier) | Q(email=identifier)
-            )
+    try:
+        usuario = Usuarios.objects.get(
+            Q(nombre=identifier) | Q(email=identifier)
+        )
 
-            if usuario.check_password(password):
-                request.session.cycle_key()
-                request.session['usuario_id'] = usuario.id  # Si manejas sesión
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Inicio de sesión exitoso',
-                    'usuario_id': usuario.id,
-                    'nombre': usuario.nombre,
-                    'email': usuario.email,
-                    'rol': usuario.rol,
-                })
-            else:
-                return JsonResponse({'success': False, 'error': 'Contraseña incorrecta'}, status=401)
-        except Usuarios.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Usuario o correo no encontrado'}, status=401)
+        if usuario.check_password(password):
+            request.session.cycle_key()
+            request.session['usuario_id'] = usuario.id
+            return JsonResponse({
+                'success': True,
+                'message': 'Inicio de sesión exitoso',
+                'usuario_id': usuario.id,
+                'nombre': usuario.nombre,
+                'email': usuario.email,
+                'rol': usuario.rol,
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Contraseña incorrecta'}, status=401)
+    except Usuarios.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Usuario o correo no encontrado'}, status=401)
 
 
 

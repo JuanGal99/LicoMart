@@ -19,7 +19,7 @@ def detalle_producto(request, producto_id):
         Productos.objects.filter(categoria=producto.categoria)
         .exclude(pk=producto.pk)
         .select_related("categoria")
-        .order_by("?")[:4]
+        .order_by("-id")[:4]
     )
 
     def serialize(p: Productos) -> dict:

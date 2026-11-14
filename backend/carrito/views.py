@@ -22,6 +22,9 @@ def _total(carrito):
 
 @require_GET
 def ver_carrito(request):
+    usuario_id, err = _require_session_user(request)
+    if err:
+        return JsonResponse({"carrito": {}, "total": 0})
     carrito = request.session.get("carrito", {})
     return JsonResponse({"carrito": carrito, "total": _total(carrito)})
 

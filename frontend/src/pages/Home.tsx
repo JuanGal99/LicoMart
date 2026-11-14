@@ -130,10 +130,12 @@ function Home({ isLoggedIn, user, search, setSearch }: Props) {
       void cargarCarrito();
     };
 
-    void cargarCarrito();
+    if (isLoggedIn) {
+      void cargarCarrito();
+    }
     window.addEventListener("carrito:updated", onUpdated);
     return () => window.removeEventListener("carrito:updated", onUpdated);
-  }, []);
+  }, [isLoggedIn]);
 
   const limpiarFiltros = () => {
     setCategoria("");
