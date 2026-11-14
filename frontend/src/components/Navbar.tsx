@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaRegUser } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
 import Logo from "./Logo";
@@ -7,7 +7,7 @@ import CartButton from "./CartButton";
 import LoginButton from "./LoginButton";
 import AuthModal from "./AuthModal";
 import { type User, getUserFromStorage } from "../services/auth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar: React.FC<{
   isLoggedIn: boolean;
@@ -19,7 +19,12 @@ const Navbar: React.FC<{
   setSearch: (v: string) => void;
 }> = ({ isLoggedIn, setIsLoggedIn, user, setUser, onLogout, search, setSearch }) => {
   const [showModal, setShowModal] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setShowModal(false);
+  }, [location.pathname]);
 
   const handleLoginClick = () => {
     if (isLoggedIn) {
@@ -30,6 +35,7 @@ const Navbar: React.FC<{
   };
 
   return (
+    <>
     <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#101214]/95 px-4 py-3 backdrop-blur-xl">
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-4">
         <Logo />
@@ -59,18 +65,19 @@ const Navbar: React.FC<{
           />
         </div>
       </div>
-      <AuthModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        onLoginSuccess={() => {
-          setIsLoggedIn(true);
-          const saved = getUserFromStorage();
-          if (saved) setUser(saved);
-          setShowModal(false);
-          if (saved?.rol === "admin") navigate("/admin");
-        }}
-      />
     </nav>
+    <AuthModal
+      visible={showModal}
+      onClose={() => setShowModal(false)}
+      onLoginSuccess={() => {
+        setIsLoggedIn(true);
+        const saved = getUserFromStorage();
+        if (saved) setUser(saved);
+        setShowModal(false);
+        if (saved?.rol === "admin") navigate("/admin");
+      }}
+    />
+    </>
   );
 };
 

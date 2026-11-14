@@ -88,8 +88,6 @@ const AuthModal: React.FC<Props> = ({ visible, onClose, onLoginSuccess }) => {
     }
   };
 
-  const inputClass =
-    "mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b0d0f] px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10";
   const iconInputClass =
     "mt-1.5 flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b0d0f] px-3 transition focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/10";
 
