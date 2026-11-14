@@ -14,7 +14,6 @@ class PedidoForm(ModelForm):
 class DetallePedidoForm(ModelForm):
     class Meta:
         model = DetallePedido
-        fields = '__all__'
         exclude = ['subtotal']
 
 DetallePedidoFormSet = modelformset_factory(

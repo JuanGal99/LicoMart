@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import axios from "axios";
+import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import { getProducto } from "../services/productos";
 import { agregarAlCarrito, getCarrito, type Carrito } from "../services/carrito";
@@ -55,7 +55,7 @@ export default function ProductDetail({ isLoggedIn, user }: Props) {
       .catch((err) => {
         if (!active) return;
         setError(
-          axios.isAxiosError(err)
+          isAxiosError(err)
             ? err.response?.data?.error || err.message
             : "No se pudo cargar el producto."
         );
@@ -94,7 +94,7 @@ export default function ProductDetail({ isLoggedIn, user }: Props) {
       window.dispatchEvent(new Event("carrito:updated"));
       toast.success("Producto agregado al carrito");
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
+      if (isAxiosError(err) && err.response?.data?.error) {
         toast.error(err.response.data.error);
       } else {
         toast.error("Error al agregar al carrito");
